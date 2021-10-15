@@ -2,50 +2,150 @@ const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 const table = process.env.DYNAMO_DB_TABLE;
 
-exports.handler = async (event, context) => {
+exports.handler = async (event, context, callback) => {
   if (event.path == "/createGame") {
-    try {
-      let data = await createGame(event);
-      return { body: data };
-    } catch (err) {
-      return { error: err };
-    }  
+    await createGame(event)
+    .then((data) => {
+      if (Object.keys(data).length == 0) {
+        callback(null, {
+          statusCode: 201,
+          body: `${JSON.parse(event.body).gameName} has been created.`,
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      } else {
+        callback(null, {
+          statusCode: 400,
+          body: `Unable to create ${JSON.parse(event.body).gameName}`,
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      }
+    })
+    .catch((err) => {
+      callback( {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: `Error: ${err}`
+        })
+      })
+    }) 
   }
   
   if (event.path == "/modifyGame") {
-    try {
-      let data = await modifyGame(event);
-      return { body: data };
-    } catch (err) {
-      return { error: err };
-    }  
+    await modifyGame(event)
+    .then((data) => {
+      if (data && Object.keys(data).length > 0) {
+        callback(null, {
+          statusCode: 200,
+          body: JSON.stringify(data.Attributes),
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      } else {
+        callback(null, {
+          statusCode: 404,
+          body: `${JSON.parse(event.body).gameName} not found`,
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      }
+    })
+    .catch((err) => {
+      callback( {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: `Error: ${err}`
+        })
+      })
+    }) 
   }
   
   if (event.path == "/deleteGame") {
-    try {
-      let data = await deleteGame(event);
-      return { body: data };
-    } catch (err) {
-      return { error: err };
-    }  
+    await deleteGame(event)
+    .then((data) => {
+      if (data && Object.keys(data).length > 0) {
+        callback(null, {
+          statusCode: 200,
+          body: JSON.stringify(data),
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      } else {
+        callback(null, {
+          statusCode: 404,
+          body: `${JSON.parse(event.body).gameName} not found`,
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      }
+    })
+    .catch((err) => {
+      callback( {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: `Error: ${err}`
+        })
+      })
+    }) 
   }
   
   if (event.path == "/getGame") {
-    try {
-      let data = await getGame(event);
-      return { body: data };
-    } catch (err) {
-      return { error: err };
-    }  
-  }
+    await getGame(event)
+    .then((data) => {
+      if (data && Object.keys(data).length > 0) {
+        callback(null, {
+          statusCode: 200,
+          body: JSON.stringify(data),
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      } else {
+        callback(null, {
+          statusCode: 404,
+          body: `${event.queryStringParameters["gameName"]} not found`,
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
+        })  
+      }
+    })
+    .catch((err) => {
+      callback( {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: `Error: ${err}`
+        })
+      })
+    })
+ }
   
   if (event.path == "/listGames") {
-    try {
-      let data = await listGames(event);
-      return { body: data };
-    } catch (err) {
-      return { error: err };
-    }
+    await listGames(event)
+    .then((data) => {
+      callback(null, {
+        statusCode: 200,
+        body: JSON.stringify(data),
+        headers: {
+          'Access-Control-Allow-Origin': '*'
+        }
+      })  
+    })
+    .catch((err) => {
+      callback( {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: `Error: ${err}`
+        })
+      })
+    })
   }
 };
 
@@ -65,12 +165,7 @@ async function createGame(event){
     ConditionExpression: 'attribute_not_exists(gameName)'
   };
   
-  try {
-    let data = await docClient.put(params).promise();
-    return JSON.stringify(data);
-  } catch (err) {
-    return err;
-  }
+  return await docClient.put(params).promise();
 }
 
 async function modifyGame(event){
@@ -101,12 +196,7 @@ async function modifyGame(event){
     ReturnValues: 'ALL_NEW'
   };
   
-  try {
-    let data = await docClient.update(params).promise();
-    return JSON.stringify(data);
-  } catch (err) {
-    return err;
-  }
+  return await docClient.update(params).promise();
 }
 
 async function getGame(event){
@@ -117,12 +207,7 @@ async function getGame(event){
     }
   };
   
-  try {
-    let data = await docClient.get(params).promise();
-    return JSON.stringify(data);
-  } catch (err) {
-    return err;
-  }
+  return await docClient.get(params).promise();
 }
 
 async function deleteGame(event){
@@ -135,12 +220,7 @@ async function deleteGame(event){
     ReturnValues: 'ALL_OLD'
   };
   
-  try {
-    let data = await docClient.delete(params).promise();
-    return JSON.stringify(data);
-  } catch (err) {
-    return err;
-  }
+  return await docClient.delete(params).promise();
 }
 
 async function listGames(event){
@@ -149,10 +229,5 @@ async function listGames(event){
     Select: "ALL_ATTRIBUTES"
   };
   
-  try {
-    let data = await docClient.scan(params).promise();
-    return JSON.stringify(data);
-  } catch (err) {
-    return err;
-  }
+  return await docClient.scan(params).promise();
 }

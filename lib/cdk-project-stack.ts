@@ -18,7 +18,7 @@ export class CdkProjectStack extends cdk.Stack {
     const lambdaFunction = new lambda.Function(this, 'aws-cdk-lambda-function', {
       code: lambda.Code.fromAsset("functions"),
       handler: 'index.handler',
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       environment: {
         DYNAMO_DB_TABLE: table.tableName
       }
@@ -35,20 +35,7 @@ export class CdkProjectStack extends cdk.Stack {
     const apiIntegration = new apigateway.LambdaIntegration(lambdaFunction);
 
     //Method schemas
-    const getModel = api.addModel('GetModel', {
-      contentType: 'application/json',
-      modelName: 'GetModel',
-      schema: {
-      schema: apigateway.JsonSchemaVersion.DRAFT4,
-      title: 'getModel',
-      type: apigateway.JsonSchemaType.OBJECT,
-      properties: {
-          gameName: { type: apigateway.JsonSchemaType.STRING },
-      },
-      required: ['gameName'],
-      },
-    }); 
-    const postModel = api.addModel('PostModel', {
+    const requestModel = api.addModel('RequestModel', {
       contentType: 'application/json',
       modelName: 'PostModel',
       schema: {
@@ -65,23 +52,44 @@ export class CdkProjectStack extends cdk.Stack {
       },
       required: ['gameName'],
       },
-    }); 
+    });
 
     //Method definitions
     api.root.addResource("getGame").addMethod("GET", apiIntegration, {
-      requestModels: { 'application/json': getModel }
+      requestParameters: {
+        "method.request.querystring.gameName": true,
+      },
+      requestValidator: new apigateway.RequestValidator(api, 'getValidator', {
+        restApi: api,
+        validateRequestBody: false,
+        validateRequestParameters: true,
+      })
     });
     api.root.addResource("listGames").addMethod("GET", apiIntegration);
     
     api.root.addResource("createGame").addMethod("POST", apiIntegration, {
-      requestModels: { 'application/json': postModel }
+      requestModels: { 'application/json': requestModel },
+      requestValidator: new apigateway.RequestValidator(api, "createValidator", {
+        restApi: api,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
     });
     api.root.addResource("modifyGame").addMethod("PUT", apiIntegration, {
-      requestModels: { 'application/json': postModel }
+      requestModels: { 'application/json': requestModel },
+      requestValidator: new apigateway.RequestValidator(api, 'modifyValidator', {
+        restApi: api,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
     });
     api.root.addResource("deleteGame").addMethod("DELETE", apiIntegration, {
-      requestModels: { 'application/json': getModel }
-    });
-    
+      requestModels: { 'application/json': requestModel },
+      requestValidator: new apigateway.RequestValidator(api, 'deleteValidator', {
+        restApi: api,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });    
   }
 }
