@@ -42,7 +42,6 @@ exports.handler = async (event, context) => {
   if (event.path == "/listGames") {
     try {
       let data = await listGames(event);
-      console.log(data)
       return { body: data };
     } catch (err) {
       return { error: err };
@@ -52,15 +51,16 @@ exports.handler = async (event, context) => {
 
 
 async function createGame(event){
+  let body = JSON.parse(event.body);
   let params = {
     TableName: table,
     Item: {
-      gameName: event.queryStringParameters['gameName'],
-      description: event.queryStringParameters['description'],
-      genre: event.queryStringParameters['genre'],
-      yearReleased: event.queryStringParameters['yearReleased'],
-      developer: event.queryStringParameters['developer'],
-      console: event.queryStringParameters['console']
+      gameName: body.gameName,
+      description: body.description,
+      genre: body.genre,
+      yearReleased: body.yearReleased,
+      developer: body.developer,
+      console: body.console
     },
     ConditionExpression: 'attribute_not_exists(gameName)'
   };
@@ -78,20 +78,21 @@ async function modifyGame(event){
   const modifyParameters = [ 'description', 'genre', 'yearReleased', 'developer', 'console' ];
   let expressionAttributeNames={};
   let expressionAttributeValues = {};
-  
+  let body = JSON.parse(event.body);
+
   //Generate dynammic update expression based on allowed parameters
-  for (let parameter in event.queryStringParameters) {
+  for (let parameter in body) {
     if (modifyParameters.includes(parameter)) {
       updateExpression.push(`#${parameter} = :${parameter}`);
       expressionAttributeNames['#'+parameter] = parameter ;
-      expressionAttributeValues[':'+parameter]=event.queryStringParameters[parameter];  
+      expressionAttributeValues[':'+parameter]=`${body[parameter]}`;  
     }
   }
   
   let params = {
     TableName: table,
     Key: {
-      gameName: event.queryStringParameters['gameName']
+      gameName: body.gameName
     },
     UpdateExpression: `SET ${updateExpression.join(",")}`,
     ExpressionAttributeNames: expressionAttributeNames,
@@ -112,7 +113,7 @@ async function getGame(event){
   let params = {
     TableName: table,
     Key: {
-      gameName: event.queryStringParameters['gameName']
+      gameName: event.queryStringParameters["gameName"]
     }
   };
   
@@ -125,10 +126,11 @@ async function getGame(event){
 }
 
 async function deleteGame(event){
+  let body = JSON.parse(event.body);
   let params = {
     TableName: table,
     Key: {
-        gameName: event.queryStringParameters['gameName']
+        gameName: body.gameName
     },
     ReturnValues: 'ALL_OLD'
   };

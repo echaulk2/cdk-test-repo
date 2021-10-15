@@ -26,52 +26,62 @@ export class CdkProjectStack extends cdk.Stack {
 
     table.grantReadWriteData(lambdaFunction);   
     
-    //API Gateway and methods
+    //API Gateway
     const api = new apigateway.LambdaRestApi(this, "aws-cdk-rest-api", {
       handler: lambdaFunction,
       proxy: false,
       restApiName: "Game Management API"
     });
     const apiIntegration = new apigateway.LambdaIntegration(lambdaFunction);
-    const requestValidator = api.addRequestValidator("request-validator", {
-      requestValidatorName: "queryStringValidator",
-      validateRequestBody: false,
-      validateRequestParameters: true
-    });
 
-    api.root.addResource("getGame").addMethod("GET", apiIntegration, {
-      requestParameters: {
-        "method.request.querystring.gameName": true,
+    //Method schemas
+    const getModel = api.addModel('GetModel', {
+      contentType: 'application/json',
+      modelName: 'GetModel',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'getModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          gameName: { type: apigateway.JsonSchemaType.STRING },
       },
-      requestValidator: requestValidator,
+      required: ['gameName'],
+      },
+    }); 
+    const postModel = api.addModel('PostModel', {
+      contentType: 'application/json',
+      modelName: 'PostModel',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'postModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          gameName: { type: apigateway.JsonSchemaType.STRING },
+          yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
+          genre: { type: apigateway.JsonSchemaType.STRING },
+          description: { type: apigateway.JsonSchemaType.STRING },
+          developer: { type: apigateway.JsonSchemaType.STRING },
+          console: { type: apigateway.JsonSchemaType.STRING },          
+      },
+      required: ['gameName'],
+      },
+    }); 
+
+    //Method definitions
+    api.root.addResource("getGame").addMethod("GET", apiIntegration, {
+      requestModels: { 'application/json': getModel }
     });
     api.root.addResource("listGames").addMethod("GET", apiIntegration);
+    
     api.root.addResource("createGame").addMethod("POST", apiIntegration, {
-      requestParameters: {
-        "method.request.querystring.gameName": true,
-        "method.request.querystring.genre": false,
-        "method.request.querystring.description": false,
-        "method.request.querystring.console": false,
-        "method.request.querystring.yearReleased": false
-      },
-      requestValidator: requestValidator,
-    });    
-    api.root.addResource("modifyGame").addMethod("PUT", apiIntegration, {
-      requestParameters: {
-        "method.request.querystring.gameName": true,
-        "method.request.querystring.genre": false,
-        "method.request.querystring.description": false,
-        "method.request.querystring.console": false,
-        "method.request.querystring.yearReleased": false
-      },
-      requestValidator: requestValidator,
-    });   
-    api.root.addResource("deleteGame").addMethod("DELETE", apiIntegration, {
-      requestParameters: {
-        "method.request.querystring.gameName": true
-      },
-      requestValidator: requestValidator
+      requestModels: { 'application/json': postModel }
     });
-
+    api.root.addResource("modifyGame").addMethod("PUT", apiIntegration, {
+      requestModels: { 'application/json': postModel }
+    });
+    api.root.addResource("deleteGame").addMethod("DELETE", apiIntegration, {
+      requestModels: { 'application/json': getModel }
+    });
+    
   }
 }
