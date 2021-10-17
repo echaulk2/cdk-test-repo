@@ -5,7 +5,7 @@ const allowedRequestParameters = JSON.parse(process.env.ALLOWED_REQUEST_PARAMETE
 
 exports.handler = async (event, context, callback) => {
   if (event.path == "/getGame") {
-    await getGame(event)
+    await getGame(event);
   }
   
   if (event.path == "/listGames") {
@@ -17,11 +17,11 @@ exports.handler = async (event, context, callback) => {
   }
   
   if (event.path == "/modifyGame") {
-    await modifyGame(event)
+    await modifyGame(event);
   }
   
   if (event.path == "/deleteGame") {
-    await deleteGame(event)
+    await deleteGame(event);
   }
 
   //Assign data to the callback function and apply the appropriate Status Code
@@ -33,7 +33,7 @@ exports.handler = async (event, context, callback) => {
           default:
             callback(null, {
               statusCode: `${data.statusCode}`,
-              body: `Message: ${data.message}\nError Code: ${data.code}\nStatus Code: ${data.statusCode}`,
+              body: `Message: ${data.message}\nStatus Code: ${data.statusCode}`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -46,7 +46,7 @@ exports.handler = async (event, context, callback) => {
           case 0:
             callback(null, {
               statusCode: 404,
-              body: `Message: ${event.queryStringParameters["gameName"]} not found`,
+              body: `Message: ${event.queryStringParameters["gameName"]} not found\nStatus Code: 404`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -78,7 +78,7 @@ exports.handler = async (event, context, callback) => {
           message: `Error: ${err}`
         })
       })
-    })
+    });
   }
 
   async function listGames() {
@@ -89,7 +89,7 @@ exports.handler = async (event, context, callback) => {
           default:
             callback(null, {
               statusCode: `${data.statusCode}`,
-              body: `Message: ${data.message}\nError Code: ${data.code}\nStatus Code: ${data.statusCode}`,
+              body: `Message: ${data.message}\nStatus Code: ${data.statusCode}`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -121,7 +121,7 @@ exports.handler = async (event, context, callback) => {
           message: `Error: ${err}`
         })
       })
-    })
+    });
   }
 
   async function createGame(event) {
@@ -129,10 +129,19 @@ exports.handler = async (event, context, callback) => {
     .then((data) => {
       if (data.hasOwnProperty('code') && data.hasOwnProperty('message') && data.hasOwnProperty('statusCode')) {
         switch (data.code) {
+          case 'ConditionalCheckFailedException':
+            callback(null, {
+              statusCode: `403`,
+              body: `Message: ${JSON.parse(event.body).gameName} already exists.\nStatus Code: 403`,
+              headers: {
+                'Access-Control-Allow-Origin': '*'
+              }
+            });
+            break;
           default:
             callback(null, {
               statusCode: `${data.statusCode}`,
-              body: `Message: ${data.message}\nError Code: ${data.code}\nStatus Code: ${data.statusCode}`,
+              body: `Message: ${data.message}\nStatus Code: ${data.statusCode}`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -165,7 +174,7 @@ exports.handler = async (event, context, callback) => {
           message: `Error: ${err}`
         })
       })
-    }) 
+    }); 
   }
 
   async function modifyGame(event) {
@@ -176,7 +185,7 @@ exports.handler = async (event, context, callback) => {
           case 'ConditionalCheckFailedException':
             callback(null, {
               statusCode: `404`,
-              body: `${JSON.parse(event.body).gameName} not found.`,
+              body: `Message: ${JSON.parse(event.body).gameName} not found.\nStatus Code: 404`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -185,7 +194,7 @@ exports.handler = async (event, context, callback) => {
           default:
             callback(null, {
               statusCode: `${data.statusCode}`,
-              body: `Message: ${data.message}\nError Code: ${data.code}\nStatus Code: ${data.statusCode}`,
+              body: `Message: ${data.message}\nStatus Code: ${data.statusCode}`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -217,7 +226,7 @@ exports.handler = async (event, context, callback) => {
           message: `Error: ${err}`
         })
       })
-    })
+    });
   }
 
   async function deleteGame(event) {
@@ -228,7 +237,7 @@ exports.handler = async (event, context, callback) => {
           default:
             callback(null, {
               statusCode: `${data.statusCode}`,
-              body: `Message: ${data.message}\nError Code: ${data.code}\nStatus Code: ${data.statusCode}`,
+              body: `Message: ${data.message}\nStatus Code: ${data.statusCode}`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -241,7 +250,7 @@ exports.handler = async (event, context, callback) => {
           case 0:
             callback(null, {
               statusCode: 404,
-              body: `Message: ${JSON.parse(event.body).gameName} not found`,
+              body: `Message: ${JSON.parse(event.body).gameName} not found\nStatus Code: 404`,
               headers: {
                 'Access-Control-Allow-Origin': '*'
               }
@@ -377,4 +386,4 @@ exports.handler = async (event, context, callback) => {
       return err;
     }
   }
-};
+}
