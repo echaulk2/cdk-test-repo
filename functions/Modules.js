@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Game = void 0;
+class Game {
+    //Constructor 
+    constructor(gameName, yearReleased, genre, console, developer) {
+        this.gameName = gameName,
+            this.yearReleased = yearReleased,
+            this.genre = genre,
+            this.console = console,
+            this.developer = developer;
+    }
+}
+exports.Game = Game;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiTW9kdWxlcy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIk1vZHVsZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsTUFBYSxJQUFJO0lBUWIsY0FBYztJQUNkLFlBQVksUUFBZSxFQUFFLFlBQW9CLEVBQUUsS0FBYSxFQUFFLE9BQWUsRUFBRSxTQUFpQjtRQUNqRyxJQUFJLENBQUMsUUFBUSxHQUFHLFFBQVE7WUFDeEIsSUFBSSxDQUFDLFlBQVksR0FBRyxZQUFZO1lBQ2hDLElBQUksQ0FBQyxLQUFLLEdBQUcsS0FBSztZQUNsQixJQUFJLENBQUMsT0FBTyxHQUFHLE9BQU87WUFDdEIsSUFBSSxDQUFDLFNBQVMsR0FBRyxTQUFTLENBQUE7SUFDN0IsQ0FBQztDQUNIO0FBaEJGLG9CQWdCRSIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjbGFzcyBHYW1lIHsgXHJcbiAgICAvL0ZpZWxkcyBcclxuICAgIGdhbWVOYW1lOiBzdHJpbmc7IFxyXG4gICAgeWVhclJlbGVhc2VkPzogbnVtYmVyO1xyXG4gICAgZ2VucmU/OiBzdHJpbmc7XHJcbiAgICBjb25zb2xlPzogc3RyaW5nO1xyXG4gICAgZGV2ZWxvcGVyPzogc3RyaW5nO1xyXG4gIFxyXG4gICAgLy9Db25zdHJ1Y3RvciBcclxuICAgIGNvbnN0cnVjdG9yKGdhbWVOYW1lOnN0cmluZywgeWVhclJlbGVhc2VkPzpudW1iZXIsIGdlbnJlPzpzdHJpbmcsIGNvbnNvbGU/OnN0cmluZywgZGV2ZWxvcGVyPzpzdHJpbmcpIHsgXHJcbiAgICAgICB0aGlzLmdhbWVOYW1lID0gZ2FtZU5hbWUsXHJcbiAgICAgICB0aGlzLnllYXJSZWxlYXNlZCA9IHllYXJSZWxlYXNlZCxcclxuICAgICAgIHRoaXMuZ2VucmUgPSBnZW5yZSxcclxuICAgICAgIHRoaXMuY29uc29sZSA9IGNvbnNvbGUsXHJcbiAgICAgICB0aGlzLmRldmVsb3BlciA9IGRldmVsb3BlclxyXG4gICAgfVxyXG4gfVxyXG5cclxuZXhwb3J0IGludGVyZmFjZSBJSHR0cFJlc3BvbnNlIHtcclxuICAgc3RhdHVzQ29kZTogbnVtYmVyLFxyXG4gICBib2R5OiBzdHJpbmcsXHJcbn0iXX0=
