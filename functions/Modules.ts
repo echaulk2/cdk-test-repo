@@ -16,10 +16,6 @@ export class Game {
     }    
  }
 
-export function SerializeGameData(data: IGameObject) {
-   return new Game(data.gameName, data.yearReleased, data.genre, data.console, data.developer);
-}
-
 export interface IGameObject {
    gameName: string,
    yearReleased?: number,
