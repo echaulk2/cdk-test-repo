@@ -13,8 +13,20 @@ export class Game {
        this.genre = genre,
        this.console = console,
        this.developer = developer
-    }
+    }    
  }
+
+export function SerializeGameData(data: IGameObject) {
+   return new Game(data.gameName, data.yearReleased, data.genre, data.console, data.developer);
+}
+
+export interface IGameObject {
+   gameName: string,
+   yearReleased?: number,
+   genre?: string,
+   console?: string,
+   developer?: string
+}
 
 export interface IHttpResponse {
    statusCode: number,
