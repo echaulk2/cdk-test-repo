@@ -1,7 +1,6 @@
 module.exports = {
+  preset: "@shelf/jest-dynamodb",
   testEnvironment: 'node',
   roots: ['<rootDir>/test'],
-  transform: {
-    '^.+\\.js$': 'babel-jest',
-  }
+  testMatch: ['**/*.test.ts']
 };
