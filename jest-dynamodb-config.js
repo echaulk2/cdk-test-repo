@@ -1,7 +1,8 @@
+process.env['DYNAMO_DB_TEST_TABLE'] = 'dynamoDB-test-table';
 module.exports = {
     tables: [
       {
-        TableName: 'dynamoDB-test-table',
+        TableName: process.env.DYNAMO_DB_TEST_TABLE,
         KeySchema: [
           {AttributeName: 'gameName', KeyType: 'HASH'},
         ],        

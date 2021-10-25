@@ -8,9 +8,8 @@ const config = {
     region: 'local-env',
   }),
 };
-const testTable = 'dynamoDB-test-table';
 const docClient = new AWS.DynamoDB.DocumentClient(config);
-const table = (isTest) ? testTable : process.env.DYNAMO_DB_TABLE;
+const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_DB_TABLE;
 
 export class Game { 
     //Fields 
