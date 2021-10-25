@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-import { Game, IHttpResponse, IDynamoObject, ListGames } from "./modules"
+import { Game, GetGame, ModifyGame, DeleteGame, IHttpResponse, IDynamoObject, ListGames } from "./game"
 
 exports.handler = async (event: any, context: any, callback: any) => {
   switch (event.path) {
@@ -29,7 +29,7 @@ exports.handler = async (event: any, context: any, callback: any) => {
 }  
 
 export async function GetGameHttpResponse(game: Game) {
-  let response = await game.GetGame();
+  let response = await GetGame(game);
   if (response.code) {
     return ParseDynamoError(response.code);
   } else if (response.Item) {
@@ -62,19 +62,19 @@ export async function CreateGameHttpResponse(game: Game) {
 }
 
 export async function ModifyGameHttpResponse(game: Game) {
-  let response = await game.ModifyGame();
+  let response = await ModifyGame(game);
   if (response.code) {
     return ParseDynamoError(response.code);
-  } else if (response.Item) {
-    return HttpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } else if (response.Attributes) {
+    return HttpResponse({statusCode: 200, body: JSON.stringify(response.Attributes)});
   }
 }
 
 export async function DeleteGameHttpResponse(game: Game) {
-  let response = await game.DeleteGame();
+  let response = await DeleteGame(game);
   if (response.code) {
     return ParseDynamoError(response.code);
-  } else if (response.Item) {
+  } else if (response.Attributes) {
     return HttpResponse({statusCode: 200, body: JSON.stringify(response)});
   } else {
     return HttpResponse({statusCode: 404, body: "Unable to delete game."});
@@ -95,10 +95,8 @@ export function DeserializeGameData(data: IDynamoObject) {
   return new Game(data.gameName, data.yearReleased, data.genre, data.console, data.developer);
 }
 
-function ParseDynamoError(error: string) {
+export function ParseDynamoError(error: string) {
   switch(error) {
-    case "AccessDeniedException":
-        return HttpResponse({statusCode: 400, body: "Unauthorized request."});
     case "ConditionalCheckFailedException":
         return HttpResponse({statusCode: 400, body: "Error with the provided condition."});
     default:

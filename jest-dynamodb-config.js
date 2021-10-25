@@ -1,11 +1,14 @@
 module.exports = {
     tables: [
       {
-        TableName: `files`,
-        KeySchema: [{AttributeName: 'id', KeyType: 'HASH'}],
-        AttributeDefinitions: [{AttributeName: 'id', AttributeType: 'S'}],
+        TableName: 'dynamoDB-test-table',
+        KeySchema: [
+          {AttributeName: 'gameName', KeyType: 'HASH'},
+        ],        
+        AttributeDefinitions: [
+          {AttributeName: 'gameName', AttributeType: 'S'}    
+        ],
         ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
-      },
-      // etc
+      }
     ],
   };
