@@ -1,168 +1,105 @@
 const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
-const table = process.env.DYNAMO_DB_TABLE;
-import { Game as Game, IHttpResponse as IHttpResponse } from "./Modules";
-const allowedRequestParameters = JSON.parse(process.env.ALLOWED_REQUEST_PARAMETERS!);
+import { Game, GetGame, ModifyGame, DeleteGame, IHttpResponse, IDynamoObject, ListGames } from "./game"
 
 exports.handler = async (event: any, context: any, callback: any) => {
   switch (event.path) {
     case ("/getGame"):
-      await getGame(event.queryStringParameters["gameName"]);
+      let getGameData = DeserializeGameData({gameName: event.queryStringParameters["gameName"]});
+      callback(null, await GetGameHttpResponse(getGameData));
       break;
     case ("/listGames"):
-      await listGames();
+      callback(null, await ListGamesHttpResponse());
       break;
     case("/createGame"):
-      await createGame(new Game(JSON.parse(event.body).gameName, JSON.parse(event.body).yearReleased, JSON.parse(event.body).genre, JSON.parse(event.body).console, JSON.parse(event.body).developer));
+      let createGameData = DeserializeGameData(JSON.parse(event.body));
+      callback(null, await CreateGameHttpResponse(createGameData));
       break;
     case("/modifyGame"):
-      await modifyGame(new Game(JSON.parse(event.body).gameName, JSON.parse(event.body).yearReleased, JSON.parse(event.body).genre, JSON.parse(event.body).console, JSON.parse(event.body).developer));
+      let modifyGameData = DeserializeGameData(JSON.parse(event.body));
+      callback(null, await ModifyGameHttpResponse(modifyGameData));
       break;
     case ("/deleteGame"):
-      await deleteGame(JSON.parse(event.body).gameName);
+      let deleteGameData = DeserializeGameData(JSON.parse(event.body));
+      callback(null, await DeleteGameHttpResponse(deleteGameData));
       break;
     default:
-      HttpResponse({statusCode: 400, body: JSON.stringify("Unable to process request")});
+      callback(null, HttpResponse({statusCode: 400, body: JSON.stringify("Invalid operation.")}));
       break;
-  }
-  
-  async function getGame(gameName: string) {
-    let params = {
-      TableName: table,
-      Key: {
-        gameName: gameName
-      }
-    };
+    }
+}  
 
-    try {
-      let response = await docClient.get(params).promise();
-      if (response.Item) {
-        let game = new Game(response.Item.gameName, response.Item.yearReleased, response.Item.genre, response.Item.console, response.Item.developer);
-        HttpResponse({statusCode: 200, body: JSON.stringify(game)});
-      } else {
-        throw Error;
-     }
-    } catch (err) {
-      throw HttpResponse({statusCode: 404, body: `Unable to find game.`});
-    }
+export async function GetGameHttpResponse(game: Game) {
+  let response = await GetGame(game);
+  if (response.code) {
+    return ParseDynamoError(response.code);
+  } else if (response.Item) {
+    return HttpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } else {
+    return HttpResponse({statusCode: 404, body: "Unable to get game."});
   }
-  
-  async function listGames() {
-    let params = {
-      TableName: table,
-      Select: "ALL_ATTRIBUTES"
-    };
-    
-    try {
-      let response = await docClient.scan(params).promise();
-      let gameList : Game[] = [];
-      
-      if (response.Items) {
-        response.Items.forEach((game: Game) => {
-          gameList.push(new Game(game.gameName, game.yearReleased, game.genre, game.console, game.developer));
-        })
-        HttpResponse({statusCode: 200, body: JSON.stringify(gameList)})
-      } else {
-        throw Error;
-     }
-    } catch (err) {
-      throw HttpResponse({statusCode: 404, body: `Game list could not be found.`});
-    }
-  }
+}
 
-  async function createGame(game: Game) {
-    let params = {
-      TableName: table,
-      Item: {
-        gameName: game.gameName,
-        genre: game.genre,
-        yearReleased: game.yearReleased,
-        developer: game.developer,
-        console: game.console
-      },
-      ConditionExpression: 'attribute_not_exists(gameName)'
-    }
+export async function ListGamesHttpResponse() {
+  let response = await ListGames();
+  if (response.code) {
+    return ParseDynamoError(response.code);
+  } else if (response.Items) {
+    return HttpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } else {
+    return HttpResponse({statusCode: 404, body: "Unable to get list of games."})
+  }
+}
 
-    try {
-      let response = await docClient.put(params).promise();
-      if (Object.keys(response).length == 0) {
-        HttpResponse({statusCode: 201, body: JSON.stringify(game)});
-      } else {
-        throw Error;
-     }
-    } catch(err) {
-      throw HttpResponse({statusCode: 403, body: `Unable to create game.`});
+export async function CreateGameHttpResponse(game: Game) {
+  let response = await game.CreateGame();
+  if (response.code) {
+    return ParseDynamoError(response.code);
+  } else if (response.Item) {
+    return HttpResponse({statusCode: 201, body: JSON.stringify(response)});
+  } else {
+    return HttpResponse({statusCode: 404, body: "Unable to create game."});
+  }
+}
+
+export async function ModifyGameHttpResponse(game: Game) {
+  let response = await ModifyGame(game);
+  if (response.code) {
+    return ParseDynamoError(response.code);
+  } else if (response.Attributes) {
+    return HttpResponse({statusCode: 200, body: JSON.stringify(response.Attributes)});
+  }
+}
+
+export async function DeleteGameHttpResponse(game: Game) {
+  let response = await DeleteGame(game);
+  if (response.code) {
+    return ParseDynamoError(response.code);
+  } else if (response.Attributes) {
+    return HttpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } else {
+    return HttpResponse({statusCode: 404, body: "Unable to delete game."});
+  }
+}
+
+export function HttpResponse(data: IHttpResponse) {
+  return {
+    statusCode: data.statusCode,
+    body: data.body,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
     }
   }
+}
 
-  async function modifyGame(game: Game) {
-    let updateExpression: String[] = [];
-    let expressionAttributeNames = {} as any;
-    let expressionAttributeValues = {} as any;
-    let body = JSON.parse(event.body);
-    
-    //Generate dynammic update expression based on allowed parameters
-    for (let parameter in body) {
-      if (allowedRequestParameters.includes(parameter)) {
-        updateExpression.push(`#${parameter} = :${parameter}`);
-        expressionAttributeNames['#'+parameter] = parameter ;
-        expressionAttributeValues[':'+parameter]=`${body[parameter]}`;  
-      }
-    }
-    
-    let params = {
-      TableName: table,
-      Key: {
-        gameName: body.gameName
-      },
-      UpdateExpression: `SET ${updateExpression.join(",")}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
-      ConditionExpression: 'attribute_exists(gameName)',
-      ReturnValues: 'ALL_NEW'
-    };
-    
-    try {
-      let response = await docClient.update(params).promise();
-      if (response.Attributes) {
-        HttpResponse({statusCode: 200, body: JSON.stringify(game)});
-      } else {
-        throw Error;
-      }
-    } catch (err) {
-      throw HttpResponse({statusCode: 403, body: `Unable to modify game.`});
-    }
-  }
-  
-  async function deleteGame(gameName: string) {
-    let params = {
-      TableName: table,
-      Key: {
-          gameName: gameName
-      },
-      ReturnValues: 'ALL_OLD'
-    };
-    
-    try {
-      let response = await docClient.delete(params).promise();
-      if (response.Attributes) {
-        let game = new Game(response.Attributes.gameName, response.Attributes.yearReleased, response.Attributes.genre, response.Attributes.console, response.Attributes.developer);
-        HttpResponse({statusCode: 200, body: JSON.stringify(game)});
-      } else {
-        throw Error;
-     }
-    } catch (err) {
-      throw HttpResponse({statusCode: 400, body: `Unable to delete game.`});
-    }
-  }
+export function DeserializeGameData(data: IDynamoObject) {
+  return new Game(data.gameName, data.yearReleased, data.genre, data.console, data.developer);
+}
 
-  function HttpResponse(data: IHttpResponse) {
-    callback(null, {
-      statusCode: data.statusCode,
-      body: data.body,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      }
-    })
+export function ParseDynamoError(error: string) {
+  switch(error) {
+    case "ConditionalCheckFailedException":
+        return HttpResponse({statusCode: 400, body: "Error with the provided condition."});
+    default:
+        return HttpResponse({statusCode: 400, body: "Invalid operation."});
   }
 }
