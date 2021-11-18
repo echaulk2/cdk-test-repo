@@ -1,252 +1,104 @@
 const game = require("../functions/game");
+const gameManager = require("../functions/gameManager");
 const index = require("../functions/index");
+const error = require("../functions/gameErrorHandler")
 
-test("CreateGame - Success", async () => {
-    let data = new game.Game('League of Legends', '2008', 'Moba', 'PC', 'Riot Games');
-    let response = await data.CreateGame();
-    expect(response).toEqual({
-        Item: {
-            gameName: 'League of Legends',
-            yearReleased: '2008', 
-            genre: 'Moba', 
-            console: 'PC', 
-            developer: 'Riot Games'
-        }
-    })
+test("CreateGame", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let response = await testGame.createGame();
+    expect(response).toEqual(testGame);
 });
 
 test("GetGame", async () => {
-    let data = new game.Game("League of Legends");
-    let response = await game.GetGame(data);
-    expect(response).toEqual({
-        Item: {
-            gameName: "League of Legends",
-            yearReleased: '2008', 
-            genre: 'Moba', 
-            console: 'PC', 
-            developer: 'Riot Games'
-        }
-    })
-});
-
-test("ListGames", async () => {
-    let response = await game.ListGames();
-    expect(response).toEqual({
-        Items: [{
-            genre: 'Moba', 
-            console: 'PC', 
-            developer: 'Riot Games',
-            gameName: 'League of Legends',
-            yearReleased: '2008', 
-        }],
-        Count: 1,
-        ScannedCount: 1
-    })
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.getGame(testGame);
+    expect(response).toEqual(testGame);
 });
 
 test("ModifyGame", async () => {
-    let data = new game.Game('League of Legends', '2008', 'Moba', 'PC', 'Riot Games');
-    let response = await data.CreateGame();
-    
-    data = index.DeserializeGameData({ gameName: 'League of Legends', yearReleased: '2021', genre: 'Strategy' })
-    response = await game.ModifyGame(data);
-    
-    expect(response).toEqual({
-        Attributes: {
-            gameName: 'League of Legends',
-            yearReleased: '2021', 
-            genre: 'Strategy', 
-            console: 'PC', 
-            developer: 'Riot Games'
-        }
-    })
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.modifyGame(testGame);
+    expect(response).toEqual(testGame);
 });
 
 test("DeleteGame", async () => {
-    let data = new game.Game("League of Legends");
-    let response = await game.DeleteGame(data);
-    expect(response).toEqual({
-        Attributes: {
-            gameName: "League of Legends",
-            yearReleased: '2021', 
-            genre: 'Strategy', 
-            console: 'PC', 
-            developer: 'Riot Games'
-        }
-    })
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.deleteGame(testGame);
+    expect(response).toEqual(testGame);
 });
 
-test("GetGameHttpResponse - 200", async () => {
-    let data = new game.Game('League of Legends', '2008', 'Moba', 'PC', 'Riot Games');
-    let response = await data.CreateGame();
-
-    data = index.DeserializeGameData({ gameName: 'League of Legends' })
-    response = await index.GetGameHttpResponse(data);
-    
-    expect(response).toEqual({
-        statusCode: 200,
-        body: JSON.stringify({
-            Item: {
-                genre: 'Moba', 
-                console: 'PC', 
-                developer: 'Riot Games',
-                gameName: 'League of Legends',
-                yearReleased: '2008', 
-            }
-        }),
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("serializeDynamoResponse", async () => {
+    let dynamoResponse = {
+        'userID':'erikchaulk',
+        'gameName':'League of Legends',
+        'yearReleased':2010,
+        'genre':'Moba',
+        'console':'PC',
+        'developer':'Riot Games'
+    }
+    let response = gameManager.serializeDynamoResponse(dynamoResponse);
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    expect(response).toEqual(testGame);
 });
 
-test("GetGameHttpResponse - 404 - Game doesn't exist", async () => {
-    let data = index.DeserializeGameData({ gameName: 'The Witness' })
-    let response = await index.GetGameHttpResponse(data);
-    
-    expect(response).toEqual({
-        statusCode: 404,
-        body: "Unable to get game.",
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("gameErrorHandler", async () => {
+    let testError = new error.GameError('Game not found', 404);
+    expect(testError.message).toEqual("Game error, datastore response: Game not found");
+    expect(testError.statusCode).toEqual(404);    
 });
 
-test("CreateGameHttpResponse - 201 - Success", async () => {
-    let data = new game.Game('Portal 2', '2010', 'Puzzle', 'PC', 'Valve');
-    let response = await index.CreateGameHttpResponse(data);
-    expect(response).toEqual({
-        statusCode: 201,
-        body: JSON.stringify({
-            Item: {
-                genre: 'Puzzle', 
-                console: 'PC', 
-                developer: 'Valve',
-                gameName: 'Portal 2',
-                yearReleased: '2010', 
-            }
-        }),
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("createGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await index.createGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
-test("CreateGameHttpResponse - 400 - Game already exists", async () => {
-    let data = new game.Game('Portal 2', '2010', 'Puzzle', 'PC', 'Valve');
-    let response = await index.CreateGameHttpResponse(data);
-    expect(response).toEqual({
-        statusCode: 400,
-        body: "Error with the provided condition.",
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+//Game already created
+test("createGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await index.createGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
 });
 
-test("ListGamesHttpResponse - 200 - Success", async () => {
-    let response = await index.ListGamesHttpResponse();
-    expect(response).toEqual({
-        statusCode: 200,
-        body: JSON.stringify({
-            Items: [{
-                genre: 'Puzzle', 
-                console: 'PC', 
-                developer: 'Valve',
-                gameName: 'Portal 2',
-                yearReleased: '2010', 
-            },
-            {
-                genre: 'Moba', 
-                console: 'PC', 
-                developer: 'Riot Games',
-                gameName: 'League of Legends',
-                yearReleased: '2008', 
-            }],
-            Count: 2,
-            ScannedCount: 2
-        }),
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("getGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await index.getGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
-test("ModifyGameHttpResponse - 200 - Success", async () => {
-    let data = new game.Game('Portal 2', '2015', 'First Person Shooter', 'PC', 'Valve');
-    let response = await index.ModifyGameHttpResponse(data);
-    expect(response).toEqual({
-        statusCode: 200,
-        body: JSON.stringify(
-            {
-                genre: 'First Person Shooter', 
-                console: 'PC', 
-                developer: 'Valve',
-                gameName: 'Portal 2',
-                yearReleased: '2015', 
-            }
-        ),
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("listGamesHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let secondTestGame = new game.Game('erikchaulk', 'Magic: The Gathering', 2019, 'Trading Card Game', 'PC', 'Wizards of the Coast');
+    let gameArray = [];
+    gameArray.push(testGame, secondTestGame);
+    let userID = 'erikchaulk'
+    await secondTestGame.createGame();
+    let response = await index.listGamesHttpResponse(userID);
+    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(gameArray)}));
 });
 
-test("ModifyGameHttpResponse - 400 - Game doesn't exist", async () => {
-    let data = new game.Game('Portal 3', '2015', 'First Person Shooter', 'PC', 'Valve');
-    let response = await index.ModifyGameHttpResponse(data);
-    expect(response).toEqual({
-        statusCode: 400,
-        body: "Error with the provided condition.",
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("modifyGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let response = await index.modifyGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
-test("DeleteGameHttpResponse - 200 - Success", async () => {
-    let data = new game.Game('Portal 2');
-    let response = await index.DeleteGameHttpResponse(data);
-    expect(response).toEqual({
-        statusCode: 200,
-        body: JSON.stringify({
-            Attributes: {
-                genre: 'First Person Shooter', 
-                console: 'PC', 
-                developer: 'Valve',
-                gameName: 'Portal 2',
-                yearReleased: "2015", 
-            }
-        }),
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+//Modify a game that doesn't exist
+test("modifyGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
+    let response = await index.modifyGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
 });
 
-test("DeleteGameHttpResponse - 400 - Game not found", async () => {
-    let data = new game.Game('Portal 2');
-    let response = await index.DeleteGameHttpResponse(data);
-    expect(response).toEqual({
-        statusCode: 404,
-        body: "Unable to delete game.",
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-    })
+test("deleteGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let response = await index.deleteGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
-test("ParseDynamoError - ConditionalCheckFailedException", () => {
-    let error = "ConditionalCheckFailedException"
-    expect(index.ParseDynamoError(error)).toEqual(
-        index.HttpResponse({statusCode: 400, body: "Error with the provided condition."})
-    );
-});
-
-test("ParseDynamoError - Unhandled dynamoDB error", () => {
-    let error = "AccessDeniedException"
-    expect(index.ParseDynamoError(error)).toEqual(
-        index.HttpResponse({statusCode: 400, body: "Invalid operation."})
-    );
+//Delete a game that doesn't exist
+test("deleteGameHttpResponse", async () => {
+    let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
+    let response = await index.deleteGameHttpResponse(testGame);
+    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
 });
