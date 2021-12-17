@@ -95,7 +95,7 @@ import { GameError } from "./gameErrorHandler";
       return modifiedGame;
     } catch (err: any) {
       if (err.message == "The conditional request failed") {
-        throw new GameError("Unable to modify game.", 404);
+        throw new GameError("Unable to modify game.", 400);
       }
       throw err;
     }
@@ -119,7 +119,7 @@ import { GameError } from "./gameErrorHandler";
       return game;      
     } catch (err: any) {
       if (err.message == "The conditional request failed") {
-        throw new GameError("Unable to find game.", 404);
+        throw new GameError("Unable to delete game.", 400);
       }
       throw err;
     }
