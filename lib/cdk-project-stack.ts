@@ -3,6 +3,7 @@ import * as apigateway from '@aws-cdk/aws-apigateway';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as cognito from '@aws-cdk/aws-cognito';
+import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 
 export class CdkProjectStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -55,11 +56,16 @@ export class CdkProjectStack extends cdk.Stack {
       }
     });
 
+    const oAuthSecret = secretsmanager.Secret.fromSecretCompleteArn(
+      this,
+      'db-oauth-id',
+      'arn:aws:secretsmanager:us-east-1:221176140365:secret:220086216015-i33stbqjbfh5rlm9qi3uaimb9eo6gnrs.apps.googleusercontent.com-6xhZHY'
+    );
+
     const userPoolIdentityProviderGoogle = new cognito.UserPoolIdentityProviderGoogle(this, 'userPoolGoogle', {
       userPool: userPool,
-      //OAuth 2.0 Client ID/Secret generated in my GCP account
-      clientId: '220086216015-vq3ai6fr1qutbsc40aafk4b31mg1s7gm.apps.googleusercontent.com',
-      clientSecret: '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',
+      clientId: oAuthSecret.secretName,
+      clientSecret: oAuthSecret.secretValue.toString(),
       attributeMapping: {
         email: {
           attributeName: cognito.ProviderAttribute.GOOGLE_EMAIL.attributeName,
