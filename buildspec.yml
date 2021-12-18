@@ -9,4 +9,5 @@ phases:
       - npm test
 artifacts:
   files:
-    - '**/*'  
+    - '**/*'
+  name: 'cdk-build-artifact'   
