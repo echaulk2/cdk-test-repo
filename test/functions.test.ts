@@ -87,7 +87,7 @@ test("modifyGameHttpResponse", async () => {
 test("modifyGameHttpResponse", async () => {
     let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
     let response = await index.modifyGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
+    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to modify game."}));
 });
 
 test("deleteGameHttpResponse", async () => {
@@ -100,5 +100,5 @@ test("deleteGameHttpResponse", async () => {
 test("deleteGameHttpResponse", async () => {
     let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
     let response = await index.deleteGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
+    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to delete game."}));
 });

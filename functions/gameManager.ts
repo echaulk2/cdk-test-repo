@@ -33,7 +33,7 @@ import { GameError } from "./gameErrorHandler";
       if (err.message == "Cannot read property 'userID' of undefined") {
         throw new GameError("Unable to find game.", 404);
       }
-      throw new GameError(err.message, err.statusCode)
+      throw err
     }
   }
 
@@ -58,7 +58,7 @@ import { GameError } from "./gameErrorHandler";
       });
       return gameList;
     } catch (err: any) {
-      throw new GameError(err.message, err.statusCode)
+      throw err
     }
   }
   export async function modifyGame(game: Game) {
@@ -94,7 +94,10 @@ import { GameError } from "./gameErrorHandler";
       let modifiedGame = await getGame(game);
       return modifiedGame;
     } catch (err: any) {
-      throw new GameError(err.message, err.statusCode);
+      if (err.message == "The conditional request failed") {
+        throw new GameError("Unable to modify game.", 400);
+      }
+      throw err;
     }
   }
   
@@ -115,7 +118,10 @@ import { GameError } from "./gameErrorHandler";
       let game = serializeDynamoResponse(response.Attributes);
       return game;      
     } catch (err: any) {
-      throw new GameError(err.message, err.statusCode);
+      if (err.message == "The conditional request failed") {
+        throw new GameError("Unable to delete game.", 400);
+      }
+      throw err;
     }
   }
 
