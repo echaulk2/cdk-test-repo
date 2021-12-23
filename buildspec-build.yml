@@ -13,4 +13,3 @@ artifacts:
   files:
     - 'functions/*.ts'
     - 'template.yml'
-  name: 'cdk-build-artifact'   
