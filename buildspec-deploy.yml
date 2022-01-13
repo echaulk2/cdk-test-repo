@@ -8,4 +8,5 @@ phases:
   build:
     commands:
       - cdk synth
+      - cdk bootstrap
       - cdk deploy
