@@ -16,6 +16,7 @@ import { getGame } from "./gameManager";
 export class Game { 
     //Fields 
     userID: string;
+    sortKey: string;
     gameName: string;     
     yearReleased?: number;
     genre?: string;
@@ -26,6 +27,7 @@ export class Game {
     constructor(userID:string, gameName:string, yearReleased?:number, genre?:string, console?:string, developer?:string) { 
        this.userID = userID,
        this.gameName = gameName,
+       this.sortKey = `[${this.userID}]#[game]#[${this.gameName}]`,
        this.yearReleased = yearReleased,
        this.genre = genre,
        this.console = console,
@@ -37,13 +39,14 @@ export class Game {
         TableName: table,
         Item: {
           userID: this.userID,
+          sortKey: this.sortKey,
           gameName: this.gameName,          
           genre: this.genre,
           yearReleased: this.yearReleased,
           developer: this.developer,
           console: this.console
         },
-        ConditionExpression: 'attribute_not_exists(gameName) AND attribute_not_exists(userID)'
+        ConditionExpression: 'attribute_not_exists(gameName) AND attribute_not_exists(userID) AND attribute_not_exists(sortKey)'
       }
   
       try {

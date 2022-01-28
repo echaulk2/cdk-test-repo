@@ -12,7 +12,7 @@ export class CdkProjectStack extends cdk.Stack {
     //DynamoDB Table Definition
     const gameTable = new dynamodb.Table(this, 'aws-cdk-dynamodb-gameTable', {
       partitionKey: { name: 'userID', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'gameName', type: dynamodb.AttributeType.STRING }
+      sortKey: { name: 'sortKey', type: dynamodb.AttributeType.STRING }
     });
 
     const allowedRequestParameters = [ 'yearReleased', 'genre', 'developer', 'console' ];
@@ -126,6 +126,24 @@ export class CdkProjectStack extends cdk.Stack {
       },
     });
 
+    const collectionRequestModel = restAPI.addModel('CollectionRequestModel', {
+      contentType: 'application/json',
+      modelName: 'CollectionPostModel',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'collectionModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          gameName: { type: apigateway.JsonSchemaType.STRING },
+          yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
+          genre: { type: apigateway.JsonSchemaType.STRING },
+          developer: { type: apigateway.JsonSchemaType.STRING },
+          console: { type: apigateway.JsonSchemaType.STRING },         
+      },
+      required: ['gameName'],
+      },
+    })
+
     //Method definitions
     const getGame = restAPI.root.addResource("getGame").addMethod("GET", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
@@ -187,5 +205,47 @@ export class CdkProjectStack extends cdk.Stack {
         validateRequestParameters: false,
       })
     });
+
+    let collection = restAPI.root.addResource("collection");
+    collection.addResource("createWishlist").addMethod("POST", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      }
+    });
+
+    collection.addResource("getWishlist").addMethod("GET", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      }
+    });
+    
+    let wishlist = restAPI.root.addResource("wishlist");
+    wishlist.addResource("addGame").addMethod("PUT", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestModels: { 'application/json': collectionRequestModel },
+      requestValidator: new apigateway.RequestValidator(restAPI, "addgame-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });
+
+    wishlist.addResource("removeGame").addMethod("PUT", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestModels: { 'application/json': collectionRequestModel },
+      requestValidator: new apigateway.RequestValidator(restAPI, "delete-game-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });    
   }
 }

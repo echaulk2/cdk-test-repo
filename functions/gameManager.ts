@@ -18,9 +18,9 @@ import { GameError } from "./gameErrorHandler";
       TableName: table,
       Key: {
         userID: game.userID,
-        gameName: game.gameName
+        sortKey: game.sortKey
       },
-      KeyConditionExpression: `gameName = ${game.gameName} AND userID = ${game.userID}`
+      KeyConditionExpression: `sortKey = ${game.sortKey} AND userID = ${game.userID}`
     }
     
     try {
@@ -41,6 +41,7 @@ import { GameError } from "./gameErrorHandler";
     let params = {
       TableName: table,
       KeyConditionExpression: "#userID = :userID",
+      FilterExpression: "attribute_exists(gameName)",
       ExpressionAttributeNames: {
           "#userID": "userID"
       },
@@ -68,7 +69,7 @@ import { GameError } from "./gameErrorHandler";
     
     //Generate dynammic update expression based on allowed parameters
     for (let [key, value] of Object.entries(game)) {
-      if (key != 'userID' && key != 'gameName' && value != undefined) {
+      if (key != 'userID' && key != 'gameName' && key != 'sortKey' && value != undefined) {
         updateExpression.push(`#${key} = :${key}`);
         expressionAttributeNames[`#${key}`] = key ;
         expressionAttributeValues[`:${key}`] = value;  
@@ -79,13 +80,13 @@ import { GameError } from "./gameErrorHandler";
       TableName: table,
       Key: {
         userID: game.userID,
-        gameName: game.gameName
+        sortKey: game.sortKey
       },
-      KeyConditionExpression: `gameName = ${game.gameName} AND userID = ${game.userID}`,
+      KeyConditionExpression: `sortKey = ${game.sortKey} AND userID = ${game.userID}`,
       UpdateExpression: `SET ${updateExpression.join(",")}`,
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
-      ConditionExpression: 'attribute_exists(gameName) and attribute_exists(userID)',
+      ConditionExpression: 'attribute_exists(gameName) and attribute_exists(userID) and attribute_exists(sortKey)',
       ReturnValues: 'ALL_NEW'
     };
   
@@ -106,10 +107,10 @@ import { GameError } from "./gameErrorHandler";
       TableName: table,
       Key: {
         userID: game.userID,
-        gameName: game.gameName          
+        sortKey: game.sortKey
       },
-      KeyConditionExpression: `gameName = ${game.gameName} AND userID = ${game.userID}`,
-      ConditionExpression: 'attribute_exists(gameName) and attribute_exists(userID)',
+      KeyConditionExpression: `sortKey = ${game.sortKey} AND userID = ${game.userID}`,
+      ConditionExpression: 'attribute_exists(sortKey) and attribute_exists(userID)',
       ReturnValues: 'ALL_OLD'
     };
   
@@ -135,7 +136,7 @@ import { GameError } from "./gameErrorHandler";
 
   export interface IDynamoObject {
      userID: string,
-     gameName: string,     
+     gameName: string,   
      yearReleased?: number,
      genre?: string,
      console?: string,

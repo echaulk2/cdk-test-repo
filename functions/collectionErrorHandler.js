@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CollectionError = void 0;
+class CollectionError extends Error {
+    constructor(message, statusCode) {
+        super();
+        this.message = `Collection error, datastore response: ${message}`;
+        this.statusCode = statusCode;
+    }
+}
+exports.CollectionError = CollectionError;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29sbGVjdGlvbkVycm9ySGFuZGxlci5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImNvbGxlY3Rpb25FcnJvckhhbmRsZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsTUFBYSxlQUFnQixTQUFRLEtBQUs7SUFJdEMsWUFBWSxPQUFjLEVBQUUsVUFBaUI7UUFDekMsS0FBSyxFQUFFLENBQUM7UUFDUixJQUFJLENBQUMsT0FBTyxHQUFHLHlDQUF5QyxPQUFPLEVBQUUsQ0FBQztRQUNsRSxJQUFJLENBQUMsVUFBVSxHQUFHLFVBQVUsQ0FBQztJQUNqQyxDQUFDO0NBQ0o7QUFURCwwQ0FTQyIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjbGFzcyBDb2xsZWN0aW9uRXJyb3IgZXh0ZW5kcyBFcnJvciB7XHJcbiAgICBtZXNzYWdlOiBzdHJpbmc7XHJcbiAgICBzdGF0dXNDb2RlOiBudW1iZXI7XHJcblxyXG4gICAgY29uc3RydWN0b3IobWVzc2FnZTpzdHJpbmcsIHN0YXR1c0NvZGU6bnVtYmVyKSB7XHJcbiAgICAgICAgc3VwZXIoKTtcclxuICAgICAgICB0aGlzLm1lc3NhZ2UgPSBgQ29sbGVjdGlvbiBlcnJvciwgZGF0YXN0b3JlIHJlc3BvbnNlOiAke21lc3NhZ2V9YDtcclxuICAgICAgICB0aGlzLnN0YXR1c0NvZGUgPSBzdGF0dXNDb2RlO1xyXG4gICAgfVxyXG59Il19

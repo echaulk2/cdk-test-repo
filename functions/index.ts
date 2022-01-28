@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 import { Game } from "./game"
 import { getGame, listGames, IHttpResponse, IJSONPayload, deleteGame, modifyGame } from "./gameManager";
+import { Collection } from "./collection";
+import { addGameToCollection, getCollection, removeGameFromCollection } from "./collectionManager";
 
 exports.handler = async (event: any, context: any, callback: any) => {
   const userID = event.requestContext.authorizer.claims['cognito:username'];
@@ -25,6 +27,21 @@ exports.handler = async (event: any, context: any, callback: any) => {
     case ("/deleteGame"):
       let deleteGameData = deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await deleteGameHttpResponse(deleteGameData));
+      break;
+    case ("/collection/createWishlist"):
+      let createWishlistData = deserializeCollectionData(userID, "wishlist");
+      callback(null, await createWishListHttpResponse(createWishlistData));
+      break;
+    case ("/collection/getWishlist"):
+      callback(null, await getWishlistHttpResponse(userID));
+      break;
+    case ("/wishlist/addGame"):
+      let addGameData = deserializeGameData(userID, JSON.parse(event.body));
+      callback(null, await addGameToWishlist(addGameData));
+      break;
+    case ("/wishlist/removeGame"):
+      let removeGameData = deserializeGameData(userID, JSON.parse(event.body));
+      callback(null, await removeGameFromWishlist(removeGameData));
       break;
     default:
       callback(null, httpResponse({statusCode: 400, body: JSON.stringify("Invalid operation.")}));
@@ -77,6 +94,43 @@ export async function deleteGameHttpResponse(game: Game) {
   }
 }
 
+export async function createWishListHttpResponse(wishList: Collection) {
+  try {
+    let response = await wishList.createCollection();
+    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } catch (err: any) {
+    return httpResponse({statusCode: err.statusCode, body: err.message});
+  }
+}
+
+export async function getWishlistHttpResponse(userID: string) {
+  try {
+    let response = await getCollection(userID, "wishlist");
+    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } catch (err: any) {
+    return httpResponse({statusCode: err.statusCode, body: err.message});
+  }
+}
+export async function addGameToWishlist(game: Game) {
+  try {
+    let wishlist = await getCollection(game.userID, 'wishlist');
+    let response = await addGameToCollection(game, wishlist);
+    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } catch (err: any) {
+    return httpResponse({statusCode: err.statusCode, body: err.message});
+  }
+}
+
+export async function removeGameFromWishlist(game: Game) {
+  try {
+    let wishlist = await getCollection(game.userID, 'wishlist');
+    let response = await removeGameFromCollection(game, wishlist);
+    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+  } catch (err: any) {
+    return httpResponse({statusCode: err.statusCode, body: err.message});
+  }
+}
+
 export function httpResponse(data: IHttpResponse) : {} {
   return {
     statusCode: data.statusCode,
@@ -88,5 +142,9 @@ export function httpResponse(data: IHttpResponse) : {} {
 }
 
 export function deserializeGameData(userID: string, data: IJSONPayload) {
-  return new Game(userID, data.gameName, data.yearReleased, data.genre, data.console, data.developer);
+  return new Game(userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
+}
+
+export function deserializeCollectionData(userID: string, collectionType: string) {
+  return new Collection(userID, collectionType);
 }
