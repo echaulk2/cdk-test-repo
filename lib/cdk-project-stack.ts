@@ -206,23 +206,23 @@ export class CdkProjectStack extends cdk.Stack {
       })
     });
 
-    let collection = restAPI.root.addResource("collection");
-    collection.addResource("createWishlist").addMethod("POST", apiIntegration, {
+    let wishlistAPI = restAPI.root.addResource("collection").addResource("wishlist");
+    wishlistAPI.addResource("createWishlist").addMethod("POST", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
       }
     });
 
-    collection.addResource("getWishlist").addMethod("GET", apiIntegration, {
+    wishlistAPI.addResource("getWishlist").addMethod("GET", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
       }
     });
     
-    let wishlist = restAPI.root.addResource("wishlist");
-    wishlist.addResource("addGame").addMethod("PUT", apiIntegration, {
+    
+    wishlistAPI.addResource("addGame").addMethod("PUT", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
@@ -235,7 +235,7 @@ export class CdkProjectStack extends cdk.Stack {
       })
     });
 
-    wishlist.addResource("removeGame").addMethod("PUT", apiIntegration, {
+    wishlistAPI.addResource("removeGame").addMethod("PUT", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref

@@ -28,18 +28,17 @@ exports.handler = async (event: any, context: any, callback: any) => {
       let deleteGameData = deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await deleteGameHttpResponse(deleteGameData));
       break;
-    case ("/collection/createWishlist"):
-      let createWishlistData = deserializeCollectionData(userID, "wishlist");
-      callback(null, await createWishListHttpResponse(createWishlistData));
+    case ("/collection/wishlist/createWishlist"):
+      callback(null, await createWishlistHttpResponse(userID));
       break;
-    case ("/collection/getWishlist"):
+    case ("/collection/wishlist/getWishlist"):
       callback(null, await getWishlistHttpResponse(userID));
       break;
-    case ("/wishlist/addGame"):
+    case ("/collection/wishlist/addGame"):
       let addGameData = deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await addGameToWishlist(addGameData));
       break;
-    case ("/wishlist/removeGame"):
+    case ("/collection/wishlist/removeGame"):
       let removeGameData = deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await removeGameFromWishlist(removeGameData));
       break;
@@ -94,9 +93,10 @@ export async function deleteGameHttpResponse(game: Game) {
   }
 }
 
-export async function createWishListHttpResponse(wishList: Collection) {
+export async function createWishlistHttpResponse(userID: string) {
   try {
-    let response = await wishList.createCollection();
+    let wishlist = new Collection(userID, 'wishlist');
+    let response = await wishlist.createCollection();
     return httpResponse({statusCode: 200, body: JSON.stringify(response)});
   } catch (err: any) {
     return httpResponse({statusCode: err.statusCode, body: err.message});
