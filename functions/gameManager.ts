@@ -13,14 +13,38 @@ const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_D
 import { Game } from "./game";
 import { GameError } from "./gameErrorHandler";
  
+  export async function createGame(game: Game): Promise<Game> {
+    let params = {
+      TableName: table,
+      Item: {
+        partitionKey: game.partitionKey,
+        sortKey: game.sortKey,
+        gameName: game.gameName,          
+        genre: game.genre,
+        yearReleased: game.yearReleased,
+        developer: game.developer,
+        console: game.console
+      },
+      ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
+    }
+    
+    try {
+      let response = await docClient.put(params).promise();
+      let createdGame = await getGame(game);             
+      return game;
+    } catch(err: any) {
+      throw new GameError(err.message, err.statusCode);
+    }
+  }
+
  export async function getGame(game: Game) : Promise<Game> {
     let params = {
       TableName: table,
       Key: {
-        userID: game.userID,
+        partitionKey: game.partitionKey,
         sortKey: game.sortKey
       },
-      KeyConditionExpression: `sortKey = ${game.sortKey} AND userID = ${game.userID}`
+      KeyConditionExpression: `sortKey = ${game.sortKey} AND partitionKey = ${game.partitionKey}`
     }
     
     try {
@@ -30,7 +54,7 @@ import { GameError } from "./gameErrorHandler";
     } catch (err: any) {
       //Dynamo returns an empty object if the get can't find a record.
       //Not sure how to handle this since the documentClient doesn't throw an error
-      if (err.message == "Cannot read property 'userID' of undefined") {
+      if (err.message == "Cannot read property 'partitionKey' of undefined") {
         throw new GameError("Unable to find game.", 404);
       }
       throw err
@@ -40,13 +64,14 @@ import { GameError } from "./gameErrorHandler";
   export async function listGames(userID: string) : Promise<[Game]> {
     let params = {
       TableName: table,
-      KeyConditionExpression: "#userID = :userID",
+      KeyConditionExpression: "#partitionKey = :partitionKey AND begins_with(sortKey, :sortKey)",
       FilterExpression: "attribute_exists(gameName)",
       ExpressionAttributeNames: {
-          "#userID": "userID"
+          "#partitionKey": "partitionKey",
       },
       ExpressionAttributeValues: {
-          ":userID": userID
+          ":partitionKey": `[User]#[${userID}]`,
+          ":sortKey": "[GameItem]"
       }
     };
     
@@ -69,7 +94,7 @@ import { GameError } from "./gameErrorHandler";
     
     //Generate dynammic update expression based on allowed parameters
     for (let [key, value] of Object.entries(game)) {
-      if (key != 'userID' && key != 'gameName' && key != 'sortKey' && value != undefined) {
+      if (key != 'partitionKey' && key != 'gameName' && key != 'sortKey' && value != undefined) {
         updateExpression.push(`#${key} = :${key}`);
         expressionAttributeNames[`#${key}`] = key ;
         expressionAttributeValues[`:${key}`] = value;  
@@ -79,14 +104,14 @@ import { GameError } from "./gameErrorHandler";
     let params = {
       TableName: table,
       Key: {
-        userID: game.userID,
+        partitionKey: game.partitionKey,
         sortKey: game.sortKey
       },
-      KeyConditionExpression: `sortKey = ${game.sortKey} AND userID = ${game.userID}`,
+      KeyConditionExpression: `sortKey = ${game.sortKey} AND partitionKey = ${game.partitionKey}`,
       UpdateExpression: `SET ${updateExpression.join(",")}`,
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
-      ConditionExpression: 'attribute_exists(gameName) and attribute_exists(userID) and attribute_exists(sortKey)',
+      ConditionExpression: 'attribute_exists(partitionKey) and attribute_exists(sortKey)',
       ReturnValues: 'ALL_NEW'
     };
   
@@ -106,11 +131,11 @@ import { GameError } from "./gameErrorHandler";
     let params = {
       TableName: table,
       Key: {
-        userID: game.userID,
+        partitionKey: game.partitionKey,
         sortKey: game.sortKey
       },
-      KeyConditionExpression: `sortKey = ${game.sortKey} AND userID = ${game.userID}`,
-      ConditionExpression: 'attribute_exists(sortKey) and attribute_exists(userID)',
+      KeyConditionExpression: `sortKey = ${game.sortKey} AND partitionKey = ${game.partitionKey}`,
+      ConditionExpression: 'attribute_exists(sortKey) and attribute_exists(partitionKey)',
       ReturnValues: 'ALL_OLD'
     };
   
@@ -135,8 +160,9 @@ import { GameError } from "./gameErrorHandler";
  }
 
   export interface IDynamoObject {
-     userID: string,
-     gameName: string,   
+     partitionKey: string,   
+     sortKey: string,
+     gameName: string,
      yearReleased?: number,
      genre?: string,
      console?: string,
@@ -149,6 +175,6 @@ import { GameError } from "./gameErrorHandler";
   }
 
   export function serializeDynamoResponse(data: IDynamoObject) : Game {
-    let game = new Game(data.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
+    let game = new Game(data.partitionKey, data.sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
     return game;
   }
