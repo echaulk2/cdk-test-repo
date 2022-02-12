@@ -10,9 +10,10 @@ const config = {
 };
 const docClient = new AWS.DynamoDB.DocumentClient(config);
 const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_DB_GAME_TABLE;
-import { Game } from "./game";
-import { createGame, modifyGame, deleteGame, IDynamoObject, serializeDynamoResponse } from "./gameManager";
-import { Collection } from "./collection";
+import { Game } from "../models/game";
+import { createGame, modifyGame, deleteGame, serializeDynamoResponse } from "./gameManager";
+import { Collection } from "../models/collection";
+import * as Interfaces from "../interfaces/interfaces";
 
 export async function getCollection(collection: Collection) : Promise<[Game]> {
   let params = {
@@ -30,7 +31,7 @@ export async function getCollection(collection: Collection) : Promise<[Game]> {
   try {
     let response = await docClient.query(params).promise();      
     let gameList = [] as any
-    response.Items.forEach((game: IDynamoObject) => {
+    response.Items.forEach((game: Interfaces.IDynamoObject) => {
       let returnedGame = serializeDynamoResponse(game);
       gameList.push(returnedGame);
     });
@@ -43,7 +44,7 @@ export async function getCollection(collection: Collection) : Promise<[Game]> {
 export async function addGameToCollection(game: Game, collection: Collection) {
   try {
     let response = await createGame(game);
-    let updatedCollection = getCollection(collection);
+    let updatedCollection = await getCollection(collection);
     return updatedCollection;
   } catch (err: any) {
     throw err;
@@ -53,7 +54,7 @@ export async function addGameToCollection(game: Game, collection: Collection) {
 export async function modifyGameInCollection(game: Game, collection: Collection) {
   try {
     let response = await modifyGame(game);
-    let updatedCollection = getCollection(collection);
+    let updatedCollection = await getCollection(collection);
     return updatedCollection;
   } catch (err: any) {
     throw err;
@@ -62,7 +63,7 @@ export async function modifyGameInCollection(game: Game, collection: Collection)
 export async function removeGameFromCollection(game: Game, collection: Collection) {
   try {
     let response = await deleteGame(game);
-    let updatedCollection = getCollection(collection);
+    let updatedCollection = await getCollection(collection);
     return updatedCollection;
   } catch (err: any) {
     throw err;

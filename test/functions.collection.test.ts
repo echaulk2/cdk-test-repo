@@ -2,12 +2,14 @@ const collection = require("../functions/collection");
 const collectionManager = require("../functions/collectionManager");
 const collectionErrorHandler = require("../functions/collectionErrorHandler");
 const gameObject = require("../functions/game");
+const gameDAO = require("../functions/gameManager");
 
 test("CreateCollection", async () => {
-    let testCollection = new collection.Collection('erikchaulk','wishlist');
-    let response = await testCollection.createCollection();
-    expect(response).toEqual(testCollection);
-});
+    let testGame = new gameObject.Game(`[USER]#[erikchaulk]`, `[COLLECTIONITEM]#[WISHLIST]#[GAMEITEM]#[Overwatch]`, 'Overwatch', 2016, 'First-Person Shooter', 'PC', 'Blizzard', 100);
+    jest.setTimeout(30000);
+    let response = await gameDAO.gamePrice(6.81);
+    expect(response).toEqual(100);
+});/* 
 
 test("addGame", async () => {
     let testGame = new gameObject.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
@@ -63,4 +65,4 @@ test("collectionError", async () => {
     let collectionError = new collectionErrorHandler.CollectionError("Game not found in the collection.", 404);
     expect(collectionError.message).toEqual('Collection error, datastore response: Game not found in the collection.');
     expect(collectionError.statusCode).toEqual(404);
-});
+}); */

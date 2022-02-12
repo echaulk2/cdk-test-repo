@@ -10,25 +10,29 @@ const config = {
 };
 const docClient = new AWS.DynamoDB.DocumentClient(config);
 const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_DB_GAME_TABLE;
-import { Game } from "./game";
-import { GameError } from "./gameErrorHandler";
- 
+import { Game } from "../models/game";
+import { GameError } from "../error/gameErrorHandler";
+import { getLowestPriceData } from "./runningPriceDataManager";
+import * as Interfaces from "../interfaces/interfaces";
+
   export async function createGame(game: Game): Promise<Game> {
-    let params = {
-      TableName: table,
-      Item: {
-        partitionKey: game.partitionKey,
-        sortKey: game.sortKey,
-        gameName: game.gameName,          
-        genre: game.genre,
-        yearReleased: game.yearReleased,
-        developer: game.developer,
-        console: game.console
-      },
-      ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
-    }
-    
     try {
+      let params = {
+        TableName: table,
+        Item: {
+          partitionKey: game.partitionKey,
+          sortKey: game.sortKey,
+          gameName: game.gameName,          
+          genre: game.genre,
+          yearReleased: game.yearReleased,
+          developer: game.developer,
+          console: game.console,
+          desiredCondition: game.desiredCondition,
+          desiredPrice: game.desiredPrice,
+          lowestRunningPrice: (game.desiredPrice) ? await getLowestPriceData(game) : undefined
+        },
+        ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
+      }
       let response = await docClient.put(params).promise();
       let createdGame = await getGame(game);             
       return game;
@@ -78,7 +82,7 @@ import { GameError } from "./gameErrorHandler";
     try {
       let response = await docClient.query(params).promise();      
       let gameList = [] as any
-      response.Items.forEach((game: IDynamoObject) => {
+      response.Items.forEach((game: Interfaces.IDynamoObject) => {
         let returnedGame = serializeDynamoResponse(game);
         gameList.push(returnedGame);
       });
@@ -87,20 +91,8 @@ import { GameError } from "./gameErrorHandler";
       throw err
     }
   }
-  export async function modifyGame(game: Game) {
-    let updateExpression: String[] = [];
-    let expressionAttributeNames = {} as any;
-    let expressionAttributeValues = {} as any;
-    
-    //Generate dynammic update expression based on allowed parameters
-    for (let [key, value] of Object.entries(game)) {
-      if (key != 'partitionKey' && key != 'gameName' && key != 'sortKey' && value != undefined) {
-        updateExpression.push(`#${key} = :${key}`);
-        expressionAttributeNames[`#${key}`] = key ;
-        expressionAttributeValues[`:${key}`] = value;  
-      }
-    }
-
+  export async function modifyGame(game: Game) { 
+    let template = await generateModifyExpression(game);
     let params = {
       TableName: table,
       Key: {
@@ -108,9 +100,9 @@ import { GameError } from "./gameErrorHandler";
         sortKey: game.sortKey
       },
       KeyConditionExpression: `sortKey = ${game.sortKey} AND partitionKey = ${game.partitionKey}`,
-      UpdateExpression: `SET ${updateExpression.join(",")}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
+      UpdateExpression: `SET ${template.updateExpression.join(",")}`,
+      ExpressionAttributeNames: template.expressionAttributeNames,
+      ExpressionAttributeValues: template.expressionAttributeValues,
       ConditionExpression: 'attribute_exists(partitionKey) and attribute_exists(sortKey)',
       ReturnValues: 'ALL_NEW'
     };
@@ -151,30 +143,32 @@ import { GameError } from "./gameErrorHandler";
     }
   }
 
-  export interface IJSONPayload {
-    gameName: string,
-    yearReleased?: number,
-    genre?: string,
-    console?: string,
-    developer?: string
- }
+  export async function generateModifyExpression(game: Game) : Promise<Interfaces.IUpdateExpression>{
+    let updateExpression: String[] = [];
+    let expressionAttributeNames = {} as any;
+    let expressionAttributeValues = {} as any;
+    
+    //Generate dynammic update expression based on allowed parameters
+    for (let [key, value] of Object.entries(game)) {
+      if (key != 'partitionKey' && key != 'gameName' && key != 'sortKey' && value != undefined) {
+        updateExpression.push(`#${key} = :${key}`);
+        expressionAttributeNames[`#${key}`] = key ;
+        expressionAttributeValues[`:${key}`] = value;  
+      }
+    }
+    //Whenever a game is modified, this rechecks the price
+    updateExpression.push('#lowestRunningPrice = :lowestRunningPrice');
+    expressionAttributeNames['#lowestRunningPrice'] = 'lowestRunningPrice';
+    expressionAttributeValues[':lowestRunningPrice'] = await getLowestPriceData(game); 
 
-  export interface IDynamoObject {
-     partitionKey: string,   
-     sortKey: string,
-     gameName: string,
-     yearReleased?: number,
-     genre?: string,
-     console?: string,
-     developer?: string
-  }
-  
-  export interface IHttpResponse {
-     statusCode: number,
-     body: string,
+    return {
+      updateExpression: updateExpression,
+      expressionAttributeNames: expressionAttributeNames,
+      expressionAttributeValues: expressionAttributeValues
+    }
   }
 
-  export function serializeDynamoResponse(data: IDynamoObject) : Game {
-    let game = new Game(data.partitionKey, data.sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
+  export function serializeDynamoResponse(data: Interfaces.IDynamoObject) : Game {
+    let game = new Game(data.partitionKey, data.sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice, data?.lowestRunningPrice);
     return game;
   }

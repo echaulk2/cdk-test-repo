@@ -1,9 +1,9 @@
 const AWS = require('aws-sdk');
-import { Game } from "./game"
-import { getGame, listGames, IHttpResponse, IJSONPayload, deleteGame, modifyGame, createGame } from "./gameManager";
-import { Collection } from "./collection";
-import { Wishlist } from "./wishlist";
-import { getCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "./collectionManager";
+import { Game } from "./models/game"
+import { getGame, listGames, deleteGame, modifyGame, createGame } from "./dataManger/gameManager";
+import { Wishlist } from "./models/wishlist";
+import { getCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "./dataManger/collectionManager";
+import * as Interfaces from "./interfaces/interfaces"
 
 exports.handler = async (event: any, context: any, callback: any) => {
   const userID = event.requestContext.authorizer.claims['cognito:username'];
@@ -34,15 +34,15 @@ exports.handler = async (event: any, context: any, callback: any) => {
       break;
     case ("/collection/wishlist/addGame"):
       let addGameData = deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
-      callback(null, await addGameToWishlist(addGameData));
+      callback(null, await addGameToWishlist(addGameData, userID));
       break;
     case ("/collection/wishlist/modifyGame"):
       let modifyWishlistData = deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
-      callback(null, await modifyGameInWishlist(modifyWishlistData));
+      callback(null, await modifyGameInWishlist(modifyWishlistData, userID));
       break;
     case ("/collection/wishlist/removeGame"):
       let removeGameData = deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
-      callback(null, await removeGameFromWishlist(removeGameData));
+      callback(null, await removeGameFromWishlist(removeGameData, userID));
       break;
     default:
       callback(null, httpResponse({statusCode: 400, body: JSON.stringify("Invalid operation.")}));
@@ -104,9 +104,9 @@ export async function getWishlistHttpResponse(userID: string) {
     return httpResponse({statusCode: err.statusCode, body: err.message});
   }
 }
-export async function addGameToWishlist(game: Game) {
+export async function addGameToWishlist(game: Game, userID: string) {
   try {
-    let wishlist = new Wishlist(game.partitionKey);
+    let wishlist = new Wishlist(userID);
     let response = await addGameToCollection(game, wishlist);
     return httpResponse({statusCode: 200, body: JSON.stringify(response)});
   } catch (err: any) {
@@ -114,18 +114,18 @@ export async function addGameToWishlist(game: Game) {
   }
 }
 
-export async function modifyGameInWishlist(game: Game) {
+export async function modifyGameInWishlist(game: Game, userID: string) {
   try {
-    let wishlist = new Wishlist(game.partitionKey);
+    let wishlist = new Wishlist(userID);
     let response = await modifyGameInCollection(game, wishlist);
     return httpResponse({statusCode: 200, body: JSON.stringify(response)});
   } catch (err: any) {
     return httpResponse({statusCode: err.statusCode, body: err.message});
   }
 }
-export async function removeGameFromWishlist(game: Game) {
+export async function removeGameFromWishlist(game: Game, userID: string) {
   try {
-    let wishlist = new Wishlist(game.partitionKey);    
+    let wishlist = new Wishlist(userID);    
     let response = await removeGameFromCollection(game, wishlist);
     return httpResponse({statusCode: 200, body: JSON.stringify(response)});
   } catch (err: any) {
@@ -133,7 +133,7 @@ export async function removeGameFromWishlist(game: Game) {
   }
 }
 
-export function httpResponse(data: IHttpResponse) : {} {
+export function httpResponse(data: Interfaces.IHttpResponse) : {} {
   return {
     statusCode: data.statusCode,
     body: data.body,
@@ -143,13 +143,12 @@ export function httpResponse(data: IHttpResponse) : {} {
   }
 }
 
-export function deserializeGameData(userID: string, data: IJSONPayload) : Game {
+export function deserializeGameData(userID: string, data: Interfaces.IJSONPayload) : Game {
   let sortKey = `[GameItem]#[${data.gameName}]`;
   return new Game(userID, sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
 }
 
-export function deserializeCollectionData(userID: string, data: IJSONPayload, collectionType: string) : Game{
+export function deserializeCollectionData(userID: string, data: Interfaces.IJSONPayload, collectionType: string) : Game {
   let sortKey = `[CollectionItem]#[${collectionType}]#[GameItem]#[${data.gameName}]`;
-  return new Game(userID, sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
-
+  return new Game(userID, sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice);
 }

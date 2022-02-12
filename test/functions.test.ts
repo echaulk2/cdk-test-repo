@@ -2,7 +2,7 @@ const game = require("../functions/game");
 const gameManager = require("../functions/gameManager");
 const index = require("../functions/index");
 const error = require("../functions/gameErrorHandler")
-
+/*
 test("CreateGame", async () => {
     let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
     let response = await testGame.createGame();
@@ -13,6 +13,12 @@ test("GetGame", async () => {
     let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
     let response = await gameManager.getGame(testGame);
     expect(response).toEqual(testGame);
+});
+
+test("Cheerio", () => {
+    let testGame = new game.Game('erikchaulk', 'Overwatch', 2016, 'Strategy', 'PC', 'Blizzard');
+    let response = testGame.getPrice();
+    expect(response).toEqual(50);
 });
 
 test("ModifyGame", async () => {
@@ -101,4 +107,4 @@ test("deleteGameHttpResponse", async () => {
     let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
     let response = await index.deleteGameHttpResponse(testGame);
     expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to delete game."}));
-});
+}); */

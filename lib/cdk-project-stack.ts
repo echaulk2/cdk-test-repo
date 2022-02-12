@@ -11,13 +11,13 @@ export class CdkProjectStack extends cdk.Stack {
 
     //DynamoDB Table Definition
     const gameTable = new dynamodb.Table(this, 'aws-cdk-dynamodb-gameTable', {
-      partitionKey: { name: 'userID', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'partitionKey', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'sortKey', type: dynamodb.AttributeType.STRING }
     });
 
     const allowedRequestParameters = [ 'yearReleased', 'genre', 'developer', 'console' ];
 
-    //Lambda Function
+        //Lambda Function
     const lambdaFunction = new lambda.Function(this, 'aws-cdk-lambda-function', {
       code: lambda.Code.fromAsset("functions"),
       handler: 'index.handler',
@@ -25,7 +25,8 @@ export class CdkProjectStack extends cdk.Stack {
       environment: {
         DYNAMO_DB_GAME_TABLE: gameTable.tableName,
         ALLOWED_REQUEST_PARAMETERS: JSON.stringify(allowedRequestParameters)
-      }
+      },
+      timeout: cdk.Duration.seconds(30)
     });
     gameTable.grantReadWriteData(lambdaFunction); 
 
@@ -115,7 +116,6 @@ export class CdkProjectStack extends cdk.Stack {
       title: 'postModel',
       type: apigateway.JsonSchemaType.OBJECT,
       properties: {
-          userID: { type: apigateway.JsonSchemaType.STRING },
           gameName: { type: apigateway.JsonSchemaType.STRING },
           yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
           genre: { type: apigateway.JsonSchemaType.STRING },
@@ -126,19 +126,21 @@ export class CdkProjectStack extends cdk.Stack {
       },
     });
 
-    const collectionRequestModel = restAPI.addModel('CollectionRequestModel', {
+    const wishlistRequestModel = restAPI.addModel('WishlistRequestModel', {
       contentType: 'application/json',
-      modelName: 'CollectionPostModel',
+      modelName: 'WishlistRequestModel',
       schema: {
       schema: apigateway.JsonSchemaVersion.DRAFT4,
-      title: 'collectionModel',
+      title: 'wishlistModel',
       type: apigateway.JsonSchemaType.OBJECT,
       properties: {
           gameName: { type: apigateway.JsonSchemaType.STRING },
           yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
           genre: { type: apigateway.JsonSchemaType.STRING },
           developer: { type: apigateway.JsonSchemaType.STRING },
-          console: { type: apigateway.JsonSchemaType.STRING },         
+          console: { type: apigateway.JsonSchemaType.STRING },
+          desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
+          condition: { type: apigateway.JsonSchemaType.STRING },                   
       },
       required: ['gameName'],
       },
@@ -207,14 +209,7 @@ export class CdkProjectStack extends cdk.Stack {
     });
 
     let wishlistAPI = restAPI.root.addResource("collection").addResource("wishlist");
-    wishlistAPI.addResource("createWishlist").addMethod("POST", apiIntegration, {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: {
-        authorizerId: authorizer.ref
-      }
-    });
-
-    wishlistAPI.addResource("getWishlist").addMethod("GET", apiIntegration, {
+    wishlistAPI.addMethod("GET", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
@@ -222,12 +217,12 @@ export class CdkProjectStack extends cdk.Stack {
     });
     
     
-    wishlistAPI.addResource("addGame").addMethod("PUT", apiIntegration, {
+    wishlistAPI.addResource("addGame").addMethod("POST", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': collectionRequestModel },
+      requestModels: { 'application/json': wishlistRequestModel },
       requestValidator: new apigateway.RequestValidator(restAPI, "addgame-wishlist-request-validator", {
         restApi: restAPI,
         validateRequestBody: true,
@@ -235,12 +230,25 @@ export class CdkProjectStack extends cdk.Stack {
       })
     });
 
-    wishlistAPI.addResource("removeGame").addMethod("PUT", apiIntegration, {
+    wishlistAPI.addResource("modifyGame").addMethod("PUT", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': collectionRequestModel },
+      requestModels: { 'application/json': wishlistRequestModel },
+      requestValidator: new apigateway.RequestValidator(restAPI, "modifygame-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });
+
+    wishlistAPI.addResource("removeGame").addMethod("DELETE", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestModels: { 'application/json': wishlistRequestModel },
       requestValidator: new apigateway.RequestValidator(restAPI, "delete-game-wishlist-request-validator", {
         restApi: restAPI,
         validateRequestBody: true,
