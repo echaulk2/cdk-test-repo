@@ -12,7 +12,7 @@ const docClient = new AWS.DynamoDB.DocumentClient(config);
 const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_DB_GAME_TABLE;
 import { Game } from "../models/game";
 import { GameError } from "../error/gameErrorHandler";
-import { getLowestPriceData } from "./runningPriceDataManager";
+import { getPriceData } from "./priceDataManager";
 import * as Interfaces from "../interfaces/interfaces";
 
   export async function createGame(game: Game): Promise<Game> {
@@ -29,7 +29,7 @@ import * as Interfaces from "../interfaces/interfaces";
           console: game.console,
           desiredCondition: game.desiredCondition,
           desiredPrice: game.desiredPrice,
-          lowestRunningPrice: (game.desiredPrice) ? await getLowestPriceData(game) : undefined
+          priceData: (game.desiredPrice) ? await getPriceData(game) : undefined
         },
         ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
       }
@@ -157,9 +157,11 @@ import * as Interfaces from "../interfaces/interfaces";
       }
     }
     //Whenever a game is modified, this rechecks the price
-    updateExpression.push('#lowestRunningPrice = :lowestRunningPrice');
-    expressionAttributeNames['#lowestRunningPrice'] = 'lowestRunningPrice';
-    expressionAttributeValues[':lowestRunningPrice'] = await getLowestPriceData(game); 
+    if (game.desiredPrice) {
+      updateExpression.push('#priceData = :priceData');
+      expressionAttributeNames['#priceData'] = 'priceData';
+      expressionAttributeValues[':priceData'] = await getPriceData(game);       
+    }
 
     return {
       updateExpression: updateExpression,
@@ -169,6 +171,6 @@ import * as Interfaces from "../interfaces/interfaces";
   }
 
   export function serializeDynamoResponse(data: Interfaces.IDynamoObject) : Game {
-    let game = new Game(data.partitionKey, data.sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice, data?.lowestRunningPrice);
+    let game = new Game(data.partitionKey, data.sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice, data?.priceData);
     return game;
   }

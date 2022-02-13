@@ -122,7 +122,7 @@ export class CdkProjectStack extends cdk.Stack {
           developer: { type: apigateway.JsonSchemaType.STRING },
           console: { type: apigateway.JsonSchemaType.STRING },          
       },
-      required: ['userID', 'gameName'],
+      required: ['gameName'],
       },
     });
 
@@ -140,7 +140,7 @@ export class CdkProjectStack extends cdk.Stack {
           developer: { type: apigateway.JsonSchemaType.STRING },
           console: { type: apigateway.JsonSchemaType.STRING },
           desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
-          condition: { type: apigateway.JsonSchemaType.STRING },                   
+          desiredCondition: { type: apigateway.JsonSchemaType.STRING },                   
       },
       required: ['gameName'],
       },

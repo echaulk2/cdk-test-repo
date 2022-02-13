@@ -1,5 +1,4 @@
-import { getLowestPriceData } from "../dataManger/runningPriceDataManager"
-import { RunningPriceData } from "../models/runningPriceData";
+import { PriceData } from "../models/priceData";
 export class Game { 
     //Fields 
     partitionKey: string;
@@ -11,10 +10,10 @@ export class Game {
     developer?: string;
     desiredCondition?: string;
     desiredPrice?: number;
-    lowestRunningPrice?: RunningPriceData;
+    priceData?: PriceData;
   
     //Constructor 
-    constructor(userID:string, sortKey:string, gameName:string, yearReleased?:number, genre?:string, console?:string, developer?:string, desiredCondition?:string, desiredPrice?:number, lowestRunningPrice?: RunningPriceData) { 
+    constructor(userID:string, sortKey:string, gameName:string, yearReleased?:number, genre?:string, console?:string, developer?:string, desiredCondition?:string, desiredPrice?:number, priceData?: PriceData) { 
        this.partitionKey = `[User]#[${userID}]`,
        this.sortKey = sortKey,
        this.gameName = gameName,
@@ -24,6 +23,6 @@ export class Game {
        this.developer = developer,
        this.desiredCondition = desiredCondition,
        this.desiredPrice = desiredPrice,
-       this.lowestRunningPrice = lowestRunningPrice
+       this.priceData = priceData
     }
  }

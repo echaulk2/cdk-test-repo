@@ -1,4 +1,4 @@
-import { RunningPriceData } from "../models/runningPriceData";
+import { PriceData } from "../models/priceData";
 
   export interface IUpdateExpression {
     updateExpression: String[],
@@ -26,7 +26,7 @@ import { RunningPriceData } from "../models/runningPriceData";
      developer?: string,
      desiredCondition?: string,
      desiredPrice?: number,     
-     lowestRunningPrice?: RunningPriceData,
+     priceData?: PriceData,
   }
   
   export interface IHttpResponse {

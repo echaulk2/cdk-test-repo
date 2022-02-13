@@ -1,20 +1,22 @@
 import { Game } from "../models/game";
 import { GameError } from "../error/gameErrorHandler";
-import { RunningPriceData } from "../models/runningPriceData";
+import { PriceData } from "../models/priceData";
 import * as cheerio from "cheerio";
 let axios = require('axios').default;
 
-export async function getLowestPriceData(game: Game) : Promise<RunningPriceData> {
-    let url = `https://www.pricecharting.com/search-products?type=prices&q=${game.gameName}`;
-    try {
-      if (!game.desiredPrice)
-        throw new GameError("No price associated with this game.", 400);
+export async function getPriceData(game: Game) : Promise<PriceData> {
+  if (!game.desiredPrice)
+    throw new GameError("No price associated with this game.", 400);
+  let url = `https://www.pricecharting.com/search-products?type=prices&q=${game.gameName}`;    
+  try {
       const response = await axios.get(url);
       const $ = cheerio.load(response.data);
 
       let gameCondition = parseCondition(game?.desiredCondition);      
-      let lowestPriceData = {} as RunningPriceData;
-      let lowestRunningPrice = game.desiredPrice;
+      let priceData = {} as PriceData;
+      let lowestPrice = game.desiredPrice;
+      let priceSum = 0;
+      let noPriceCount = 0;
       let formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -22,17 +24,23 @@ export async function getLowestPriceData(game: Game) : Promise<RunningPriceData>
 
       $('#games_table tbody tr').each( (i: number, el: cheerio.Element) => {
         let price = Number($(el).find(`td.${gameCondition} span`).text().replace(/\s\s+\$/g, '').replace(/\$/g, '')); 
-        if (price == 0)
+        //Only averages items where there is a price entered
+        if (price == 0) {
+          noPriceCount++;
           return;
-          
-        if (price < lowestRunningPrice) {
-          lowestRunningPrice = price;
-          lowestPriceData.lowestRunningPrice = formatter.format(price);
-          lowestPriceData.url = `${$(el).find('td.title a').attr('href')}`
-          lowestPriceData.console = $(el).find('td.console').text();
+        } else {
+          priceSum+=price;
+          priceData.averagePrice = formatter.format(priceSum/(i + 1 - noPriceCount));
+        }       
+
+        if (price < lowestPrice) {
+          lowestPrice = price;
+          priceData.lowestPrice = formatter.format(price);
+          priceData.url = `${$(el).find('td.title a').attr('href')}`
+          priceData.console = $(el).find('td.console').text();
         }
       });
-      return lowestPriceData;
+      return priceData;
     } catch (err) {
         throw err;
     }
