@@ -4,6 +4,11 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as cognito from '@aws-cdk/aws-cognito';
 import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
+import * as sns from '@aws-cdk/aws-sns';
+import * as subscriptions from '@aws-cdk/aws-sns-subscriptions';
+import * as events from '@aws-cdk/aws-events';
+import * as targets from '@aws-cdk/aws-events-targets';
+import * as ssm from '@aws-cdk/aws-ssm';
 
 export class CdkProjectStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -17,6 +22,16 @@ export class CdkProjectStack extends cdk.Stack {
 
     const allowedRequestParameters = [ 'yearReleased', 'genre', 'developer', 'console' ];
 
+    const topic = new sns.Topic(this, 'sns-topic', {
+      displayName: 'My SNS topic',
+    });
+    topic.addSubscription(new subscriptions.EmailSubscription("erikchaulk@gmail.com"));
+
+    const priceDataURL = ssm.StringParameter.fromStringParameterAttributes(this, 'MyValue', {
+      parameterName: 'cdk-project-priceDataURL',
+      // 'version' can be specified but is optional.
+    }).stringValue;
+
         //Lambda Function
     const lambdaFunction = new lambda.Function(this, 'aws-cdk-lambda-function', {
       code: lambda.Code.fromAsset("functions"),
@@ -24,7 +39,9 @@ export class CdkProjectStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       environment: {
         DYNAMO_DB_GAME_TABLE: gameTable.tableName,
-        ALLOWED_REQUEST_PARAMETERS: JSON.stringify(allowedRequestParameters)
+        ALLOWED_REQUEST_PARAMETERS: JSON.stringify(allowedRequestParameters),
+        TOPIC_ARN: topic.topicArn,
+        PRICE_DATA_URL: priceDataURL
       },
       timeout: cdk.Duration.seconds(30)
     });
@@ -255,5 +272,28 @@ export class CdkProjectStack extends cdk.Stack {
         validateRequestParameters: false,
       })
     });    
-  }
+
+    wishlistAPI.addResource("customerWishlistNotifications").addMethod("GET", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestValidator: new apigateway.RequestValidator(restAPI, "notifications-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });   
+    
+    //EventBus
+    const eventRule = new events.Rule(this, 'scheduleRule', {
+      schedule: events.Schedule.rate(cdk.Duration.hours(24)),
+    });
+
+    eventRule.addTarget(new targets.ApiGateway(restAPI, {
+      path: '/collection/wishlist/customerWishlistNotifications',
+      method: 'GET',
+      stage: 'prod'
+    }));
+  } 
 }

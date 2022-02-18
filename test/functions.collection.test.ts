@@ -1,68 +1,58 @@
-const collection = require("../functions/collection");
-const collectionManager = require("../functions/collectionManager");
-const collectionErrorHandler = require("../functions/collectionErrorHandler");
-const gameObject = require("../functions/game");
-const gameDAO = require("../functions/gameManager");
+const collection = require("../functions/models/collection");
+const wishlist = require("../functions/models/wishlist");
+const collectionManager = require("../functions/dataManager/collectionManager");
+const collectionErrorHandler = require("../functions/error/collectionErrorHandler");
+const gameObject = require("../functions/models/game");
+const gameDAO = require("../functions/dataManager/gameManager");
+const priceDataManager = require("../functions/dataManager/priceDataManager");
+const gamePriceData = require("../functions/models/gamePriceData");
 
-test("CreateCollection", async () => {
-    let testGame = new gameObject.Game(`[USER]#[erikchaulk]`, `[COLLECTIONITEM]#[WISHLIST]#[GAMEITEM]#[Overwatch]`, 'Overwatch', 2016, 'First-Person Shooter', 'PC', 'Blizzard', 100);
+test("Add Game to Wishlist", async () => {
+    let partitionKey = '[User]#[erikchaulk]'
+    let sortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Super Mario]'
+    let userID = 'erikchaulk';
+    let testGame = new gameObject.Game(partitionKey, sortKey, 'Super Mario', 1992, 'Action-Adventure', 'Nintendo 64', 'Nintendo', 'loose');
+    let testWishlist = new wishlist.Wishlist(userID);
     jest.setTimeout(30000);
-    let response = await gameDAO.gamePrice(6.81);
-    expect(response).toEqual(100);
-});/* 
-
-test("addGame", async () => {
-    let testGame = new gameObject.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let testCollection = new collection.Collection('erikchaulk','wishlist');
-    testCollection.addGame(testGame);
-    expect(testCollection.games).toEqual([testGame]);
-});
-
-test("isGameInCollection", async () => {
-    let testGame = new gameObject.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let testCollection = new collection.Collection('erikchaulk','wishlist');
-    testCollection.addGame(testGame);
-    let condition = testCollection.isGameInCollection(testGame);
-    expect(condition).toEqual(true);
-});
-
-test("removeGame", async () => {
-    let newGame = new gameObject.Game('FunkyButLoving', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let someOtherGame = new gameObject.Game('FunkyButLoving', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
-    let testCollection = new collection.Collection('FunkyButLoving','wishlist');
-    testCollection.addGame(newGame);
-    testCollection.addGame(someOtherGame);
-    testCollection.removeGame(someOtherGame);    
-    expect(testCollection.games).toEqual([newGame]);
-});
-
-test("getCollection", async () => {
-    let myGame = new gameObject.Game('testUser', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let myOtherGame = new gameObject.Game('testUser', 'Magic: The Gathering', 2016, 'Strategy', 'PC', 'Wizards of the Coast');
-    let myCollection = new collection.Collection('testUser','wishlist', [myGame, myOtherGame]);
-    await myCollection.createCollection();
-    let response = await collectionManager.getCollection('testUser', 'wishlist');
-    expect(response).toEqual(myCollection);
-});
-
-test("addGameToCollection", async () => {
-    let myNewGame = new gameObject.Game('aNewUser', 'Half Life 2', 2004, 'First-Person Shooter', 'PC', 'Valve');
-    let myNewCollection = new collection.Collection('aNewUser','wishlist');
-    await myNewCollection.createCollection();
-    let response = await collectionManager.addGameToCollection(myNewGame, myNewCollection);
-    expect(response).toEqual(myNewCollection);
+    let response = await collectionManager.addGameToCollection(testGame, testWishlist);
+    expect(response).toEqual([testGame]);
 });
 
 test("removeGameFromCollection", async () => {
-    let walkingTesterGame = new gameObject.Game('walkingTester', 'Half Life 2', 2004, 'First-Person Shooter', 'PC', 'Valve');
-    let walkingTesterCollection = new collection.Collection('walkingTester','wishlist',[walkingTesterGame]);
-    await walkingTesterCollection.createCollection();
-    let response = await collectionManager.removeGameFromCollection(walkingTesterGame, walkingTesterCollection);
-    expect(response).toEqual(walkingTesterCollection);
+    let partitionKey = '[User]#[erikchaulk]';
+    let sortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Super Mario]';
+    let secondSortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Overwatch]';
+    let userID = 'erikchaulk';
+    let testGame = new gameObject.Game(partitionKey, sortKey, 'Super Mario', 1992, 'Action-Adventure', 'Nintendo 64', 'Nintendo', 'loose');
+    let secondTestGame = new gameObject.Game(partitionKey, secondSortKey, 'Overwatch', 2016, 'First-Person Shooter', 'PC', 'Blizzard', 'cib');
+    let testWishlist = new wishlist.Wishlist(userID);
+    await collectionManager.addGameToCollection(secondTestGame, testWishlist);
+    let response = await collectionManager.removeGameFromCollection(secondTestGame, testWishlist);
+    expect(response).toEqual([testGame]);
+});
+
+test("modifyGameInCollection", async () => {
+    let partitionKey = '[User]#[erikchaulk]';
+    let sortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Super Mario]';
+    let userID = 'erikchaulk';
+    let testGame = new gameObject.Game(partitionKey, sortKey, 'Super Mario', 1993, 'Action-Adventure', 'Nintendo 64', 'Nintendo', 'loose');
+    let testWishlist = new wishlist.Wishlist(userID);
+    let response = await collectionManager.modifyGameInCollection(testGame, testWishlist);
+    expect(response).toEqual([testGame]);
+});
+
+test("getCollection", async () => {
+    let partitionKey = '[User]#[erikchaulk]';
+    let sortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Super Mario]';
+    let testGame = new gameObject.Game(partitionKey, sortKey, 'Super Mario', 1993, 'Action-Adventure', 'Nintendo 64', 'Nintendo', 'loose');
+    let userID = 'erikchaulk';
+    let testWishlist = new wishlist.Wishlist(userID);
+    let response = await collectionManager.getCollection(testWishlist);
+    expect(response).toEqual([testGame]);
 });
 
 test("collectionError", async () => {
     let collectionError = new collectionErrorHandler.CollectionError("Game not found in the collection.", 404);
     expect(collectionError.message).toEqual('Collection error, datastore response: Game not found in the collection.');
     expect(collectionError.statusCode).toEqual(404);
-}); */
+});

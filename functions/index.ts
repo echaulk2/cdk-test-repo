@@ -1,16 +1,16 @@
-const AWS = require('aws-sdk');
 import { Game } from "./models/game"
-import { getGame, listGames, deleteGame, modifyGame, createGame } from "./dataManger/gameManager";
+import { getGame, listGames, deleteGame, modifyGame, createGame } from "./dataManager/gameManager";
 import { Wishlist } from "./models/wishlist";
-import { getCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "./dataManger/collectionManager";
-import * as Interfaces from "./interfaces/interfaces"
+import { getCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "./dataManager/collectionManager";
+import * as Interfaces from "./shared/interfaces/interfaces"
+import * as Common from "./shared/common/game";
 
 exports.handler = async (event: any, context: any, callback: any) => {
   const userID = event.requestContext.authorizer.claims['cognito:username'];
   switch (event.path) {
     case ("/getGame"):
       let gameName = { gameName: event.queryStringParameters["gameName"] };
-      let getGameData = deserializeGameData(userID, gameName)
+      let getGameData = Common.deserializeGameData(userID, gameName)
       callback(null, await getGameHttpResponse(getGameData));
       break;
     case("/listGames"):
@@ -18,30 +18,30 @@ exports.handler = async (event: any, context: any, callback: any) => {
       callback(null, await listGamesHttpResponse(listGameData));
       break;
     case("/createGame"):
-      let createGameData = deserializeGameData(userID, JSON.parse(event.body));
+      let createGameData = Common.deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await createGameHttpResponse(createGameData));
       break;
     case("/modifyGame"):
-      let modifyGameData = deserializeGameData(userID, JSON.parse(event.body));
+      let modifyGameData = Common.deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await modifyGameHttpResponse(modifyGameData));
       break;
     case ("/deleteGame"):
-      let deleteGameData = deserializeGameData(userID, JSON.parse(event.body));
+      let deleteGameData = Common.deserializeGameData(userID, JSON.parse(event.body));
       callback(null, await deleteGameHttpResponse(deleteGameData));
       break;
     case ("/collection/wishlist/"):
       callback(null, await getWishlistHttpResponse(userID));
       break;
     case ("/collection/wishlist/addGame"):
-      let addGameData = deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
+      let addGameData = Common.deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
       callback(null, await addGameToWishlist(addGameData, userID));
       break;
     case ("/collection/wishlist/modifyGame"):
-      let modifyWishlistData = deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
+      let modifyWishlistData = Common.deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
       callback(null, await modifyGameInWishlist(modifyWishlistData, userID));
       break;
     case ("/collection/wishlist/removeGame"):
-      let removeGameData = deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
+      let removeGameData = Common.deserializeCollectionData(userID, JSON.parse(event.body), 'Wishlist');
       callback(null, await removeGameFromWishlist(removeGameData, userID));
       break;
     default:
@@ -141,14 +141,4 @@ export function httpResponse(data: Interfaces.IHttpResponse) : {} {
       'Access-Control-Allow-Origin': '*'
     }
   }
-}
-
-export function deserializeGameData(userID: string, data: Interfaces.IJSONPayload) : Game {
-  let sortKey = `[GameItem]#[${data.gameName}]`;
-  return new Game(userID, sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer);
-}
-
-export function deserializeCollectionData(userID: string, data: Interfaces.IJSONPayload, collectionType: string) : Game {
-  let sortKey = `[CollectionItem]#[${collectionType}]#[GameItem]#[${data.gameName}]`;
-  return new Game(userID, sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice);
 }

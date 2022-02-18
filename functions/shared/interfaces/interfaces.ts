@@ -1,4 +1,4 @@
-import { PriceData } from "../models/priceData";
+import { GamePriceData } from "../../models/gamePriceData";
 
   export interface IUpdateExpression {
     updateExpression: String[],
@@ -12,7 +12,7 @@ import { PriceData } from "../models/priceData";
     genre?: string,
     console?: string,
     developer?: string,
-    desiredCondition?: string
+    desiredCondition?: string,
     desiredPrice?: number,    
  }
 
@@ -26,7 +26,7 @@ import { PriceData } from "../models/priceData";
      developer?: string,
      desiredCondition?: string,
      desiredPrice?: number,     
-     priceData?: PriceData,
+     gamePriceData?: GamePriceData,
   }
   
   export interface IHttpResponse {

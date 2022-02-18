@@ -1,4 +1,5 @@
-import { PriceData } from "../models/priceData";
+import { GamePriceData } from "../models/gamePriceData";
+
 export class Game { 
     //Fields 
     partitionKey: string;
@@ -10,11 +11,11 @@ export class Game {
     developer?: string;
     desiredCondition?: string;
     desiredPrice?: number;
-    priceData?: PriceData;
+    gamePriceData?: GamePriceData;
   
     //Constructor 
-    constructor(userID:string, sortKey:string, gameName:string, yearReleased?:number, genre?:string, console?:string, developer?:string, desiredCondition?:string, desiredPrice?:number, priceData?: PriceData) { 
-       this.partitionKey = `[User]#[${userID}]`,
+    constructor(partitionKey:string, sortKey:string, gameName:string, yearReleased?:number, genre?:string, console?:string, developer?:string, desiredCondition?:string, desiredPrice?:number, gamePriceData?: GamePriceData) { 
+       this.partitionKey = partitionKey,
        this.sortKey = sortKey,
        this.gameName = gameName,
        this.yearReleased = yearReleased,
@@ -23,6 +24,6 @@ export class Game {
        this.developer = developer,
        this.desiredCondition = desiredCondition,
        this.desiredPrice = desiredPrice,
-       this.priceData = priceData
-    }
+       this.gamePriceData = gamePriceData
+    }    
  }

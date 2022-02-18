@@ -1,24 +1,14 @@
-const AWS = require('aws-sdk');
-const isTest = process.env.JEST_WORKER_ID;
-const config = {
-  convertEmptyValues: true,
-  ...(isTest && {
-    endpoint: 'localhost:8000',
-    sslEnabled: false,
-    region: 'local-env',
-  }),
-};
-const docClient = new AWS.DynamoDB.DocumentClient(config);
-const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_DB_GAME_TABLE;
 import { Game } from "../models/game";
 import { GameError } from "../error/gameErrorHandler";
 import { getPriceData } from "./priceDataManager";
-import * as Interfaces from "../interfaces/interfaces";
+import * as Interfaces from "../shared/interfaces/interfaces";
+import * as Config from "../shared/config/config";
+import * as Common from "../shared/common/game";
 
   export async function createGame(game: Game): Promise<Game> {
     try {
       let params = {
-        TableName: table,
+        TableName: Config.table,
         Item: {
           partitionKey: game.partitionKey,
           sortKey: game.sortKey,
@@ -29,11 +19,11 @@ import * as Interfaces from "../interfaces/interfaces";
           console: game.console,
           desiredCondition: game.desiredCondition,
           desiredPrice: game.desiredPrice,
-          priceData: (game.desiredPrice) ? await getPriceData(game) : undefined
+          gamePriceData: (game.desiredPrice) ? await getPriceData(game) : undefined
         },
         ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
       }
-      let response = await docClient.put(params).promise();
+      let response = await Config.docClient.put(params).promise();
       let createdGame = await getGame(game);             
       return game;
     } catch(err: any) {
@@ -43,7 +33,7 @@ import * as Interfaces from "../interfaces/interfaces";
 
  export async function getGame(game: Game) : Promise<Game> {
     let params = {
-      TableName: table,
+      TableName: Config.table,
       Key: {
         partitionKey: game.partitionKey,
         sortKey: game.sortKey
@@ -52,8 +42,8 @@ import * as Interfaces from "../interfaces/interfaces";
     }
     
     try {
-      let response = await docClient.get(params).promise();
-      let game = serializeDynamoResponse(response.Item);
+      let response = await Config.docClient.get(params).promise();
+      let game = Common.serializeDynamoResponse(response.Item);
       return game;
     } catch (err: any) {
       //Dynamo returns an empty object if the get can't find a record.
@@ -67,7 +57,7 @@ import * as Interfaces from "../interfaces/interfaces";
 
   export async function listGames(userID: string) : Promise<[Game]> {
     let params = {
-      TableName: table,
+      TableName: Config.table,
       KeyConditionExpression: "#partitionKey = :partitionKey AND begins_with(sortKey, :sortKey)",
       FilterExpression: "attribute_exists(gameName)",
       ExpressionAttributeNames: {
@@ -80,10 +70,10 @@ import * as Interfaces from "../interfaces/interfaces";
     };
     
     try {
-      let response = await docClient.query(params).promise();      
+      let response = await Config.docClient.query(params).promise();
       let gameList = [] as any
       response.Items.forEach((game: Interfaces.IDynamoObject) => {
-        let returnedGame = serializeDynamoResponse(game);
+        let returnedGame = Common.serializeDynamoResponse(game);
         gameList.push(returnedGame);
       });
       return gameList;
@@ -92,9 +82,9 @@ import * as Interfaces from "../interfaces/interfaces";
     }
   }
   export async function modifyGame(game: Game) { 
-    let template = await generateModifyExpression(game);
+    let template = await Common.generateModifyExpression(game);
     let params = {
-      TableName: table,
+      TableName: Config.table,
       Key: {
         partitionKey: game.partitionKey,
         sortKey: game.sortKey
@@ -108,7 +98,7 @@ import * as Interfaces from "../interfaces/interfaces";
     };
   
     try {
-      let response = await docClient.update(params).promise();
+      let response = await Config.docClient.update(params).promise();
       let modifiedGame = await getGame(game);
       return modifiedGame;
     } catch (err: any) {
@@ -121,7 +111,7 @@ import * as Interfaces from "../interfaces/interfaces";
   
   export async function deleteGame(game: Game) {
     let params = {
-      TableName: table,
+      TableName: Config.table,
       Key: {
         partitionKey: game.partitionKey,
         sortKey: game.sortKey
@@ -132,8 +122,8 @@ import * as Interfaces from "../interfaces/interfaces";
     };
   
     try {
-      let response = await docClient.delete(params).promise();
-      let game = serializeDynamoResponse(response.Attributes);
+      let response = await Config.docClient.delete(params).promise();
+      let game = Common.serializeDynamoResponse(response.Attributes);
       return game;      
     } catch (err: any) {
       if (err.message == "The conditional request failed") {
@@ -141,36 +131,4 @@ import * as Interfaces from "../interfaces/interfaces";
       }
       throw err;
     }
-  }
-
-  export async function generateModifyExpression(game: Game) : Promise<Interfaces.IUpdateExpression>{
-    let updateExpression: String[] = [];
-    let expressionAttributeNames = {} as any;
-    let expressionAttributeValues = {} as any;
-    
-    //Generate dynammic update expression based on allowed parameters
-    for (let [key, value] of Object.entries(game)) {
-      if (key != 'partitionKey' && key != 'gameName' && key != 'sortKey' && value != undefined) {
-        updateExpression.push(`#${key} = :${key}`);
-        expressionAttributeNames[`#${key}`] = key ;
-        expressionAttributeValues[`:${key}`] = value;  
-      }
-    }
-    //Whenever a game is modified, this rechecks the price
-    if (game.desiredPrice) {
-      updateExpression.push('#priceData = :priceData');
-      expressionAttributeNames['#priceData'] = 'priceData';
-      expressionAttributeValues[':priceData'] = await getPriceData(game);       
-    }
-
-    return {
-      updateExpression: updateExpression,
-      expressionAttributeNames: expressionAttributeNames,
-      expressionAttributeValues: expressionAttributeValues
-    }
-  }
-
-  export function serializeDynamoResponse(data: Interfaces.IDynamoObject) : Game {
-    let game = new Game(data.partitionKey, data.sortKey, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice, data?.priceData);
-    return game;
   }

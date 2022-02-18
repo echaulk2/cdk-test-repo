@@ -1,23 +1,13 @@
-const AWS = require('aws-sdk');
-const isTest = process.env.JEST_WORKER_ID;
-const config = {
-  convertEmptyValues: true,
-  ...(isTest && {
-    endpoint: 'localhost:8000',
-    sslEnabled: false,
-    region: 'local-env',
-  }),
-};
-const docClient = new AWS.DynamoDB.DocumentClient(config);
-const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.DYNAMO_DB_GAME_TABLE;
 import { Game } from "../models/game";
-import { createGame, modifyGame, deleteGame, serializeDynamoResponse } from "./gameManager";
+import { createGame, modifyGame, deleteGame } from "./gameManager";
 import { Collection } from "../models/collection";
-import * as Interfaces from "../interfaces/interfaces";
+import * as Interfaces from "../shared/interfaces/interfaces";
+import * as Config from "../shared/config/config"
+import * as Common from "../shared/common/game"
 
 export async function getCollection(collection: Collection) : Promise<[Game]> {
   let params = {
-    TableName: table,
+    TableName: Config.table,
     KeyConditionExpression: `#partitionKey = :partitionKey AND begins_with(sortKey, :sortKey)`,
     ExpressionAttributeNames: {
         "#partitionKey": "partitionKey",
@@ -29,10 +19,10 @@ export async function getCollection(collection: Collection) : Promise<[Game]> {
   };
   
   try {
-    let response = await docClient.query(params).promise();      
+    let response = await Config.docClient.query(params).promise();      
     let gameList = [] as any
     response.Items.forEach((game: Interfaces.IDynamoObject) => {
-      let returnedGame = serializeDynamoResponse(game);
+      let returnedGame = Common.serializeDynamoResponse(game);
       gameList.push(returnedGame);
     });
     return gameList;
