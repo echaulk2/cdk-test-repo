@@ -4,11 +4,10 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as cognito from '@aws-cdk/aws-cognito';
 import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
-import * as sns from '@aws-cdk/aws-sns';
-import * as subscriptions from '@aws-cdk/aws-sns-subscriptions';
 import * as events from '@aws-cdk/aws-events';
 import * as targets from '@aws-cdk/aws-events-targets';
 import * as ssm from '@aws-cdk/aws-ssm';
+import iam = require("../node_modules/@aws-cdk/aws-cloudwatch/node_modules/@aws-cdk/aws-iam"); //There's some bug with importing the iam module... see https://github.com/aws/aws-cdk/issues/8410
 
 export class CdkProjectStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -17,35 +16,67 @@ export class CdkProjectStack extends cdk.Stack {
     //DynamoDB Table Definition
     const gameTable = new dynamodb.Table(this, 'aws-cdk-dynamodb-gameTable', {
       partitionKey: { name: 'partitionKey', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'sortKey', type: dynamodb.AttributeType.STRING }
+      sortKey: { name: 'sortKey', type: dynamodb.AttributeType.STRING },
     });
 
-    const allowedRequestParameters = [ 'yearReleased', 'genre', 'developer', 'console' ];
-
-    const topic = new sns.Topic(this, 'sns-topic', {
-      displayName: 'My SNS topic',
+    gameTable.addGlobalSecondaryIndex({
+      indexName: 'itemTypeIndex',
+      partitionKey: {name: 'itemType', type: dynamodb.AttributeType.STRING},
+      readCapacity: 1,
+      writeCapacity: 1,
+      projectionType: dynamodb.ProjectionType.ALL,
     });
-    topic.addSubscription(new subscriptions.EmailSubscription("erikchaulk@gmail.com"));
 
-    const priceDataURL = ssm.StringParameter.fromStringParameterAttributes(this, 'MyValue', {
+    const priceDataURL = ssm.StringParameter.fromStringParameterAttributes(this, 'priceDataUrl', {
       parameterName: 'cdk-project-priceDataURL',
-      // 'version' can be specified but is optional.
+    }).stringValue;
+
+    const sesSourceEmailAddress = ssm.StringParameter.fromStringParameterAttributes(this, 'sesSourceEmailAddress', {
+      parameterName: 'cdk-project-sesSourceEmailAddress'
     }).stringValue;
 
         //Lambda Function
-    const lambdaFunction = new lambda.Function(this, 'aws-cdk-lambda-function', {
+    const lambdaFunction = new lambda.Function(this, 'aws-cdk-gameAPI-function', {
       code: lambda.Code.fromAsset("functions"),
       handler: 'index.handler',
       runtime: lambda.Runtime.NODEJS_14_X,
       environment: {
         DYNAMO_DB_GAME_TABLE: gameTable.tableName,
-        ALLOWED_REQUEST_PARAMETERS: JSON.stringify(allowedRequestParameters),
-        TOPIC_ARN: topic.topicArn,
         PRICE_DATA_URL: priceDataURL
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(30),
+      description: 'Lambda responsible for handling the Game API public endpoints'
     });
+
+    const notificationsLambda = new lambda.Function(this, 'aws-cdk-notifications-function', {
+      code: lambda.Code.fromAsset("functions"),
+      handler: 'notifications.handler',
+      runtime: lambda.Runtime.NODEJS_14_X,
+      environment: {
+        DYNAMO_DB_GAME_TABLE: gameTable.tableName,
+        PRICE_DATA_URL: priceDataURL,
+        SES_SOURCE_EMAIL_ADDRESS: sesSourceEmailAddress
+      },
+      timeout: cdk.Duration.seconds(30),
+      description: 'Lambda responsible for sending Collection notifications'
+    });
+
+    const sesLambdaPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["ses:SendEmail"],
+      resources: ["*"],
+    });
+
+    //Runs the Wishlist Notifications at midnight every weekday
+    const eventRule = new events.Rule(this, 'scheduleRule', {
+      schedule: events.Schedule.expression('cron(0 5 ? * MON-FRI *)')
+    });
+    eventRule.addTarget(new targets.LambdaFunction(notificationsLambda));
+
+    lambdaFunction.addToRolePolicy(sesLambdaPolicy);
+    notificationsLambda.addToRolePolicy(sesLambdaPolicy);
     gameTable.grantReadWriteData(lambdaFunction); 
+    gameTable.grantReadWriteData(notificationsLambda);
 
     //API Gateway
     const restAPI = new apigateway.LambdaRestApi(this, "aws-cdk-rest-api", {
@@ -54,7 +85,7 @@ export class CdkProjectStack extends cdk.Stack {
       restApiName: "Game Management API"
     });
     const apiIntegration = new apigateway.LambdaIntegration(lambdaFunction);
-
+    
     //Cognito
     const userPool = new cognito.UserPool(this, 'userPool', {
       selfSignUpEnabled: true,
@@ -273,27 +304,6 @@ export class CdkProjectStack extends cdk.Stack {
       })
     });    
 
-    wishlistAPI.addResource("customerWishlistNotifications").addMethod("GET", apiIntegration, {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: {
-        authorizerId: authorizer.ref
-      },
-      requestValidator: new apigateway.RequestValidator(restAPI, "notifications-wishlist-request-validator", {
-        restApi: restAPI,
-        validateRequestBody: true,
-        validateRequestParameters: false,
-      })
-    });   
     
-    //EventBus
-    const eventRule = new events.Rule(this, 'scheduleRule', {
-      schedule: events.Schedule.rate(cdk.Duration.hours(24)),
-    });
-
-    eventRule.addTarget(new targets.ApiGateway(restAPI, {
-      path: '/collection/wishlist/customerWishlistNotifications',
-      method: 'GET',
-      stage: 'prod'
-    }));
   } 
 }

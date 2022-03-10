@@ -1,4 +1,7 @@
 export class GamePriceData {
+    partitionKey: string;
+    sortKey: string;
+    itemType: string;
     lowestPrice?: string;
     averagePrice?: string;
     listedItemTitle?: string;
@@ -6,7 +9,10 @@ export class GamePriceData {
     listedItemConsole?: string;
     lastChecked?: string;
 
-    constructor(lowestPrice?: string, averagePrice?: string, listedItemTitle?: string, listedItemURL?: string, listedItemConsole?: string, lastChecked?: string) {
+    constructor(partitionKey:string, sortKey:string, itemType:string, lowestPrice?: string, averagePrice?: string, listedItemTitle?: string, listedItemURL?: string, listedItemConsole?: string, lastChecked?: string) {
+        this.partitionKey = partitionKey,
+        this.sortKey = sortKey,
+        this.itemType = itemType
         this.lowestPrice = lowestPrice,
         this.averagePrice = averagePrice,
         this.listedItemTitle = listedItemTitle,

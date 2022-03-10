@@ -1,5 +1,7 @@
 import * as Enums from "../enums/enums";
+import * as Interfaces from "../interfaces/interfaces";
 import { Game } from "../../models/game";
+import { GamePriceData } from "../../models/gamePriceData";
 
 export function setDesiredCondition(condition?: string) : Enums.DesiredCondition {
     switch(condition) {
@@ -7,7 +9,7 @@ export function setDesiredCondition(condition?: string) : Enums.DesiredCondition
           return Enums.DesiredCondition.loose;
           break;
        case('cib'):
-          return Enums.DesiredCondition.cib;
+          return Enums.DesiredCondition.completeInBox;
           break;
        default:
           return Enums.DesiredCondition.new;
@@ -25,4 +27,29 @@ export function setDesiredCondition(condition?: string) : Enums.DesiredCondition
       return true;
     }
     return false;
+  }
+
+  export function generateModifyExpression(gamePriceData: GamePriceData) : Interfaces.IUpdateExpression {
+    let updateExpression: String[] = [];
+    let expressionAttributeNames = {} as any;
+    let expressionAttributeValues = {} as any;
+    
+    //Generate dynammic update expression based on allowed parameters
+    for (let [key, value] of Object.entries(gamePriceData)) {
+      if (!Object.keys(Enums.excludedKeys).includes(key) && value != undefined) {
+        updateExpression.push(`#${key} = :${key}`);
+        expressionAttributeNames[`#${key}`] = key ;
+        expressionAttributeValues[`:${key}`] = value;  
+      }
+    }
+
+    return {
+      updateExpression: updateExpression,
+      expressionAttributeNames: expressionAttributeNames,
+      expressionAttributeValues: expressionAttributeValues
+    }
+  }
+
+  export function deserializeGamePriceData(data: Interfaces.IDynamoPriceData) : GamePriceData {
+    return new GamePriceData(data.partitionKey, data.sortKey, data.itemType, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole, data?.lastChecked);    
   }

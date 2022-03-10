@@ -1,4 +1,5 @@
 process.env['DYNAMO_DB_TEST_TABLE'] = 'dynamoDB-test-table';
+process.env['PRICE_DATA_TEST_URL'] = './test/test.html';
 module.exports = {
     tables: [
       {

@@ -4,17 +4,33 @@ const collectionManager = require("../functions/dataManager/collectionManager");
 const collectionErrorHandler = require("../functions/error/collectionErrorHandler");
 const gameObject = require("../functions/models/game");
 const gameDAO = require("../functions/dataManager/gameManager");
-const priceDataManager = require("../functions/dataManager/priceDataManager");
+const priceDataManager = require("../functions/dataManager/priceChartingDataManager");
 const gamePriceData = require("../functions/models/gamePriceData");
+const Interfaces = require("../functions/shared/interfaces/interfaces");
+const gamePriceDAO = require("../functions/dataManager/gamePriceDataManager");
 
 test("Add Game to Wishlist", async () => {
     let partitionKey = '[User]#[erikchaulk]'
-    let sortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Super Mario]'
-    let userID = 'erikchaulk';
-    let testGame = new gameObject.Game(partitionKey, sortKey, 'Super Mario', 1992, 'Action-Adventure', 'Nintendo 64', 'Nintendo', 'loose');
-    let testWishlist = new wishlist.Wishlist(userID);
+    let collectionSortKey = '[CollectionItem]#[Wishlist]#[GameItem]#[Super Mario]'
+    let collectionItemType = '[CollectionItem]#[Wishlist]#[GameItem]'
+    let userData = {
+        userID: 'erikchaulk',
+        email: 'erikchaulk@gmail.com'
+    };
+    let gamePriceDataSortKey = '[GamePriceData]#[Super Mario]';
+    let gamePriceDataItemType = '[GamePriceData]';
+    let testGame = new gameObject.Game(partitionKey, collectionSortKey, collectionItemType, 'Super Mario', userData.email, 1992, 'Action-Adventure', 'Nintendo 64', 'Nintendo', 'loose', 50);
+    let testGamePriceData = new gamePriceData.GamePriceData(partitionKey, gamePriceDataSortKey, gamePriceDataItemType);
+    testGamePriceData.lowestPrice = "$18.74";
+    testGamePriceData.averagePrice = "$44.51";
+    testGamePriceData.listedItemTitle = "Super Mario 64";
+    testGamePriceData.listedItemURL = "https://www.pricecharting.com/game/jp-nintendo-64/super-mario-64";
+    testGamePriceData.listedItemConsole = "JP Nintendo 64";
+    testGamePriceData.lastChecked = "3/10/2022, 11:15:38 AM";
+    let testWishlist = new wishlist.Wishlist(userData.userID);
     jest.setTimeout(30000);
     let response = await collectionManager.addGameToCollection(testGame, testWishlist);
+    testGame.gamePriceData = testGamePriceData;
     expect(response).toEqual([testGame]);
 });
 

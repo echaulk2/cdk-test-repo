@@ -1,6 +1,6 @@
 const game = require("../functions/models/game");
 const gameManager = require("../functions/dataManager/gameManager");
-const index = require("../functions/index");
+const httpResponse = require("../functions/shared/common/httpResponse");
 const error = require("../functions/error/gameErrorHandler")
 const common = require("../functions/shared/common/game");
 
@@ -36,8 +36,8 @@ test("DeleteGame", async () => {
     expect(response).toEqual(testDeleteGame);
 });
 
-test("serializeDynamoResponse", async () => {
-    let partitionKey = '[User]#[${erikchaulk}]'
+test("serializeGameData", async () => {
+    let partitionKey = '[User]#[erikchaulk]'
     let sortKey = '[GameItem]#[League of Legends]'
     let dynamoResponse = {
         'partitionKey':partitionKey,
@@ -48,8 +48,13 @@ test("serializeDynamoResponse", async () => {
         'console':'PC',
         'developer':'Riot Games'
     }
-    let response = common.serializeDynamoResponse(dynamoResponse);
-    let testDynamoResponse = new game.Game(partitionKey, sortKey, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let userData = {
+        userID: 'erikchaulk',
+        email: 'erikchaulk@gmail.com'
+    }
+    let itemType = '[GameItem]'
+    let response = common.serializeGameData(userData, dynamoResponse);
+    let testDynamoResponse = new game.Game(partitionKey, sortKey, itemType, 'League of Legends', userData.email, 2010, 'Moba', 'PC', 'Riot Games');
     expect(response).toEqual(testDynamoResponse);
 });
 
@@ -63,8 +68,8 @@ test("createGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]'
     let sortKey = '[GameItem]#[League of Legends]'
     let testGame = new game.Game(partitionKey, sortKey, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await index.createGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let response = await httpResponse.createGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 //Game already created
@@ -72,24 +77,24 @@ test("createGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]'
     let sortKey = '[GameItem]#[League of Legends]'
     let testGame = new game.Game(partitionKey, sortKey, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await index.createGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
+    let response = await httpResponse.createGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 400, body: "Unable to create game.  Game already exists."}));
 });
 
 test("getGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]'
     let sortKey = '[GameItem]#[League of Legends]'
     let testGame = new game.Game(partitionKey, sortKey, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await index.getGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let response = await httpResponse.getGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 test("modifyGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]';
     let sortKey = '[GameItem]#[League of Legends]';
     let testGame = new game.Game(partitionKey, sortKey, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
-    let response = await index.modifyGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let response = await httpResponse.modifyGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 //Modify a game that doesn't exist
@@ -97,16 +102,16 @@ test("modifyGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]';
     let sortKey = '[GameItem]#[The Witness]';
     let testGame = new game.Game(partitionKey, sortKey, 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
-    let response = await index.modifyGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to modify game."}));
+    let response = await httpResponse.modifyGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 400, body: "Unable to modify game.  Game not found."}));
 });
 
 test("deleteGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]';
     let sortKey = '[GameItem]#[League of Legends]';
     let testGame = new game.Game(partitionKey, sortKey, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
-    let response = await index.deleteGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let response = await httpResponse.deleteGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 //Delete a game that doesn't exist
@@ -114,7 +119,7 @@ test("deleteGameHttpResponse", async () => {
     let partitionKey = '[User]#[${erikchaulk}]';
     let sortKey = '[GameItem]#[The Witness]';
     let testGame = new game.Game(partitionKey, sortKey, 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
-    let response = await index.deleteGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to delete game."}));
+    let response = await httpResponse.deleteGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 400, body: "Unable to delete game.  Game not found."}));
 });
 
