@@ -10,7 +10,42 @@ module.exports = {
         ],
         AttributeDefinitions: [
           {AttributeName: 'partitionKey', AttributeType: 'S'},
-          {AttributeName: 'sortKey', AttributeType: 'S'}    
+          {AttributeName: 'sortKey', AttributeType: 'S'},
+          {AttributeName: 'collectionID', AttributeType: 'S'},
+          {AttributeName: 'itemType', AttributeType: 'S'},                        
+        ],
+        GlobalSecondaryIndexes: [ 
+            { 
+                IndexName: 'collectionIDIndex', 
+                KeySchema: [
+                    {
+                        AttributeName: 'collectionID',
+                        KeyType: 'HASH',
+                    },
+                    {
+                      AttributeName: 'sortKey',
+                      KeyType: 'RANGE',
+                  }
+                ],
+                ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
+                Projection: {ProjectionType: "ALL"}
+            },
+            { 
+              IndexName: 'itemTypeIndex', 
+              KeySchema: [
+                  {
+                      AttributeName: 'itemType',
+                      KeyType: 'HASH',
+                  },
+                  {
+                    AttributeName: 'sortKey',
+                    KeyType: 'RANGE',
+                }
+              ],
+              ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
+              Projection: {ProjectionType: "ALL"}
+          },
+          
         ],
         ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
       }

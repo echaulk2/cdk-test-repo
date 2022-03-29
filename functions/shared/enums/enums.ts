@@ -7,5 +7,11 @@ export enum DesiredCondition {
 export enum excludedKeys {
   partitionKey,
   sortKey,
-  gamename
+  id
+}
+
+export enum AllowedConditions {
+  loose,
+  cib,
+  new
 }

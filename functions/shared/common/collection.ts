@@ -1,32 +1,36 @@
 import { Game } from "../../models/game";
 import * as Interfaces from "../interfaces/interfaces";
-import { getGamePriceData, modifyGamePriceData } from "../../dataManager/gamePriceDataManager";
+import { createGamePriceData, getLatestGamePriceData } from "../../dataManager/gamePriceDataManager";
 import * as Config from "../config/config";
+import { Collection } from "../../models/collection";
+import { getAllPriceMonitorsForGame } from "../../dataManager/gamePriceMonitor";
+import { GamePriceData } from "../../models/gamePriceData";
+import { GamePriceMonitor } from "../../models/gamePriceMonitor";
+
 let AWS = require("aws-sdk");
 let ses = new AWS.SES({ region: "us-east-1" });
 
-export async function deserializeDynamoCollection(data: Interfaces.IDynamoGameItem) : Promise<Game> {
-    let game = new Game(data.partitionKey, data.sortKey, data.itemType, data.gameName, data.email, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice);
-    if (game.desiredPrice)
-      game.gamePriceData = await getGamePriceData(game);
+export async function deserializeDynamoCollection(data: Interfaces.IDynamoGameItem, collection: Collection) : Promise<Game> {
+    let game = new Game(data.id, data.userID, data.email, data.gameName, data.itemType, data.collectionID, data?.yearReleased, data?.genre, data?.console, data?.developer);
+    let gamePriceMonitors = await getAllPriceMonitorsForGame(game.id);
+    let gamePriceDataList = [] as any;
+    if (gamePriceMonitors.length > 0) {
+        for (let gamePriceMonitor of gamePriceMonitors) {
+            gamePriceDataList.push(await getLatestGamePriceData(gamePriceMonitor));
+        }
+        game.gamePriceData = gamePriceDataList;
+    }
     return game;
 }
-  
-export function serializeCollectionData(userData: Interfaces.IUserData, data: Interfaces.IJSONPayload, collectionType: string) : Game {
-    let partitionKey = `[User]#[${userData.userID}]`;
-    let sortKey = `[CollectionItem]#[${collectionType}]#[GameItem]#[${data.gameName}]`;
-    let itemType = `[CollectionItem]#[${collectionType}]#[GameItem]`;
-    return new Game(partitionKey, sortKey, itemType, data.gameName, userData.email, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice);
-}
 
-export async function sendRunningPriceNotification(game: Game) {
+export async function sendRunningPriceNotification(game: Game, gamePriceData: GamePriceData) {
     var params = {
         Destination: {
             ToAddresses: [game.email],
         },
         Message: {
         Body: {
-            Text: { Data: `Lowest Price: ${game.gamePriceData?.lowestPrice}\nURL: ${game.gamePriceData?.listedItemURL}\nAverage Price: ${game.gamePriceData?.averagePrice}` },
+            Text: { Data: `Lowest Price: ${gamePriceData?.lowestPrice}\nURL: ${gamePriceData?.listedItemURL}\nAverage Price: ${gamePriceData?.averagePrice}\nCondition: ${gamePriceData.desiredCondition}` },
         },
         Subject: { Data: `Collection Item: Running Price - ${game.gameName}` },
         },
@@ -35,9 +39,6 @@ export async function sendRunningPriceNotification(game: Game) {
     return ses.sendEmail(params).promise()
 }
   
-export async function monitorRunningPrice(data: Interfaces.IDynamoGameItem) : Promise<Game> {
-  let game = new Game(data.partitionKey, data.sortKey, data.itemType, data.gameName, data.email, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.desiredCondition, data?.desiredPrice);
-  if (game.desiredPrice)
-    game.gamePriceData = await modifyGamePriceData(game);
-  return game;
+export async function getLatestPriceData(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
+  return await createGamePriceData(gamePriceMonitor);
 }

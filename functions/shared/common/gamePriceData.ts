@@ -2,8 +2,9 @@ import * as Enums from "../enums/enums";
 import * as Interfaces from "../interfaces/interfaces";
 import { Game } from "../../models/game";
 import { GamePriceData } from "../../models/gamePriceData";
+import { last } from "cheerio/lib/api/traversing";
 
-export function setDesiredCondition(condition?: string) : Enums.DesiredCondition {
+export function setDesiredCondition(condition: string) : Enums.DesiredCondition {
     switch(condition) {
        case('loose'):
           return Enums.DesiredCondition.loose;
@@ -51,5 +52,11 @@ export function setDesiredCondition(condition?: string) : Enums.DesiredCondition
   }
 
   export function deserializeGamePriceData(data: Interfaces.IDynamoPriceData) : GamePriceData {
-    return new GamePriceData(data.partitionKey, data.sortKey, data.itemType, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole, data?.lastChecked);    
+    return new GamePriceData(data.partitionKey, data.gameName, data.itemType, data.desiredPrice, data.desiredCondition, data.desiredPriceExists, data.lastChecked, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole);    
+  }
+
+  export function generateTimeToLive(date: string) {
+    //Expire after 30 days
+    let newDate = new Date(date);
+    return newDate.setDate(newDate.getDate() + 30);
   }

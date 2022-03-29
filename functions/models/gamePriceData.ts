@@ -1,23 +1,29 @@
 export class GamePriceData {
-    partitionKey: string;
-    sortKey: string;
+    id: string;
+    gameName: string;
     itemType: string;
+    desiredPrice: string;
+    desiredCondition: string;
+    desiredPriceExists: boolean;
+    lastChecked: string;
     lowestPrice?: string;
     averagePrice?: string;
     listedItemTitle?: string;
     listedItemURL?: string;
     listedItemConsole?: string;
-    lastChecked?: string;
 
-    constructor(partitionKey:string, sortKey:string, itemType:string, lowestPrice?: string, averagePrice?: string, listedItemTitle?: string, listedItemURL?: string, listedItemConsole?: string, lastChecked?: string) {
-        this.partitionKey = partitionKey,
-        this.sortKey = sortKey,
-        this.itemType = itemType
+    constructor(id:string, gameName:string, itemType:string, desiredPrice:string, desiredCondition:string, desiredPriceExists:boolean, lastChecked:string, lowestPrice?:string, averagePrice?:string, listedItemTitle?:string, listedItemURL?:string, listedItemConsole?:string) {
+        this.id = id,
+        this.gameName = gameName,
+        this.itemType = itemType,
+        this.desiredPrice = desiredPrice,
+        this.desiredCondition = desiredCondition,
+        this.desiredPriceExists = desiredPriceExists,
+        this.lastChecked = lastChecked,
         this.lowestPrice = lowestPrice,
         this.averagePrice = averagePrice,
         this.listedItemTitle = listedItemTitle,
         this.listedItemURL = listedItemURL,
-        this.listedItemConsole = listedItemConsole,
-        this.lastChecked = lastChecked
+        this.listedItemConsole = listedItemConsole
     }
 }

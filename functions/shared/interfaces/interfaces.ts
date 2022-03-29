@@ -1,5 +1,6 @@
 import { Game } from "../../models/game";
 import { GamePriceData } from "../../models/gamePriceData";
+import { GamePriceMonitor } from "../../models/gamePriceMonitor";
 
   export interface IUpdateExpression {
     updateExpression: String[],
@@ -7,8 +8,10 @@ import { GamePriceData } from "../../models/gamePriceData";
     expressionAttributeValues: {}
   }
 
-  export interface IJSONPayload {
+  export interface IPayloadData {
+    id: string,
     gameName: string,
+    collectionID?: string,
     yearReleased?: number,
     genre?: string,
     console?: string,
@@ -18,11 +21,12 @@ import { GamePriceData } from "../../models/gamePriceData";
  }
 
   export interface IDynamoGameItem {
-     partitionKey: string,   
-     sortKey: string,
-     itemType: string,
+     id: string,
+     collectionID: string,
      gameName: string,
+     userID: string,
      email: string,
+     itemType: string,
      yearReleased?: number,
      genre?: string,
      console?: string,
@@ -43,19 +47,22 @@ import { GamePriceData } from "../../models/gamePriceData";
   }
 
   export interface IPriceProviders {
-    getPriceData: (game: Game) => Promise<GamePriceData>
+    getPriceData: (game: Game, gamePriceMonitor: GamePriceMonitor) => Promise<GamePriceData>
   }
 
   export interface IDynamoPriceData {
     partitionKey: string;
-    sortKey: string;
+    gameName: string;
     itemType: string;
+    desiredPrice: string;
+    desiredCondition: string;
+    desiredPriceExists: boolean;
+    lastChecked: string;
     lowestPrice?: string;
     averagePrice?: string;
     listedItemTitle?: string;
     listedItemURL?: string;
     listedItemConsole?: string;
-    lastChecked?: string;
   }
 
   export interface IUserData {
@@ -63,22 +70,7 @@ import { GamePriceData } from "../../models/gamePriceData";
     email: string
   }
 
-  export interface IGameParams {
-    TableName?: string,
-    KeyConditionExpression: string,
-    ExpressionAttributeNames: {
-      "#partitionKey": string,
-      "#sortKey": string
-    },
-    ExpressionAttributeValues: {
-      ":partitionKey": string,
-      ":sortKey": string
-    },
-    ExclusiveStartKey?: string,
-    LastEvaluatedKey?: string
-  }
-
-  export interface ICollecionParams {
+  export interface IPaginatedParams {
     TableName?: string,
     IndexName?: string,
     KeyConditionExpression: string,
@@ -94,4 +86,23 @@ import { GamePriceData } from "../../models/gamePriceData";
     },
     ExclusiveStartKey?: string,
     LastEvaluatedKey?: string
+  }
+
+  export interface IDynamoGamePriceMonitor {
+    partitionKey: string,
+    sortKey: string,
+    collectionID: string,
+    userID: string,
+    email: string,
+    desiredCondition: string,
+    desiredPrice: number
+  }
+
+  export interface IJSONGamePriceMonitor {
+    id: string,
+    collectionID: string,
+    userID: string,
+    email: string,
+    desiredCondition: string,
+    desiredPrice: number
   }

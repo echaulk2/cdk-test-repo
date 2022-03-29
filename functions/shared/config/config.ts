@@ -20,3 +20,7 @@ export const table = (isTest) ? process.env.DYNAMO_DB_TEST_TABLE : process.env.D
 export const priceDataURL = (isTest) ? process.env.PRICE_DATA_TEST_URL : process.env.PRICE_DATA_URL;
 
 export const sesSourceEmailAddress = process.env.SES_SOURCE_EMAIL_ADDRESS;
+
+export const { 
+  v4: uuidv4
+} = require('uuid');

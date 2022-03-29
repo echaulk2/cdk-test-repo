@@ -6,29 +6,29 @@ import * as cheerio from "cheerio";
 import * as Config from "../shared/config/config";
 import * as Common from "../shared/common/gamePriceData";
 import * as Interfaces from "../shared/interfaces/interfaces";
+import { GamePriceMonitor } from "../models/gamePriceMonitor";
 
 export class PriceCharting implements Interfaces.IPriceProviders {
-  getPriceData: (game: Game) => Promise<GamePriceData>;
+  getPriceData: (game: Game, gamePriceMonitor: GamePriceMonitor) => Promise<GamePriceData>;
 
   constructor() {
-    this.getPriceData = async function (game: Game) : Promise<GamePriceData> {
-      if (!game.desiredPrice)
-        throw new GameError("No price associated with this game.", 400);
+    this.getPriceData = async function (game: Game, gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
       let url = `${Config.priceDataURL}${game.gameName}`;
       try {
           const response = await Config.axios.get(url);
           const $ = cheerio.load(response.data);
     
           let priceData = {} as GamePriceData;
-          let gameCondition = Common.setDesiredCondition(game?.desiredCondition);
-          let lowestPrice = game.desiredPrice;
+          let gameCondition = Common.setDesiredCondition(gamePriceMonitor.desiredCondition);
+          let lowestPrice = gamePriceMonitor.desiredPrice;
           let priceSum = 0;
           let noPriceCount = 0;
           let formatter = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
           });
-    
+          let desiredPriceExists = false;
+          priceData.desiredPriceExists = desiredPriceExists;
           $('#games_table tbody tr').each( (i: number, el: cheerio.Element) => {
             let listedPrice = Number($(el).find(`td.${gameCondition} span`).text().replace(/\s\s+\$/g, '').replace(/\$/g, ''));
             let listedConsole = $(el).find('td.console').text().replace(/\s\s+/g, '');
@@ -46,6 +46,7 @@ export class PriceCharting implements Interfaces.IPriceProviders {
             if (listedPrice < lowestPrice) {
               lowestPrice = listedPrice;
               priceData.lowestPrice = formatter.format(listedPrice);
+              priceData.desiredPriceExists = true;
               priceData.listedItemURL = listedItemURL;
               priceData.listedItemConsole = listedConsole;
               priceData.listedItemTitle = listedItemTitle;
@@ -54,7 +55,7 @@ export class PriceCharting implements Interfaces.IPriceProviders {
           priceData.lastChecked = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
           return priceData;
         } catch (err) {
-            throw new GamePriceError("Error gathering PriceCharting game price data", 400);
+            throw new GamePriceError("Error gathering PriceCharting game price data");
         }
     }     
   }    

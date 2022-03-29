@@ -17,16 +17,36 @@ export class CdkProjectStack extends cdk.Stack {
     const gameTable = new dynamodb.Table(this, 'aws-cdk-dynamodb-gameTable', {
       partitionKey: { name: 'partitionKey', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'sortKey', type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: "expirationDate"
     });
 
     gameTable.addGlobalSecondaryIndex({
       indexName: 'itemTypeIndex',
       partitionKey: {name: 'itemType', type: dynamodb.AttributeType.STRING},
+      sortKey: {name: 'sortKey', type: dynamodb.AttributeType.STRING},
       readCapacity: 1,
       writeCapacity: 1,
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    gameTable.addGlobalSecondaryIndex({
+      indexName: 'collectionIDIndex',
+      partitionKey: {name: 'collectionID', type: dynamodb.AttributeType.STRING},
+      sortKey: {name: 'sortKey', type: dynamodb.AttributeType.STRING},
+      readCapacity: 1,
+      writeCapacity: 1,
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+    
+    gameTable.addGlobalSecondaryIndex({
+      indexName: 'userIDIndex',
+      partitionKey: {name: 'userID', type: dynamodb.AttributeType.STRING},
+      sortKey: {name: 'itemType', type: dynamodb.AttributeType.STRING},
+      readCapacity: 1,
+      writeCapacity: 1,
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+    
     const priceDataURL = ssm.StringParameter.fromStringParameterAttributes(this, 'priceDataUrl', {
       parameterName: 'cdk-project-priceDataURL',
     }).stringValue;
@@ -156,9 +176,9 @@ export class CdkProjectStack extends cdk.Stack {
     })
 
     //Method schema
-    const requestModel = restAPI.addModel('RequestModel', {
+    const addGameModel = restAPI.addModel('AddRequestModel', {
       contentType: 'application/json',
-      modelName: 'PostModel',
+      modelName: 'AddRequestModel',
       schema: {
       schema: apigateway.JsonSchemaVersion.DRAFT4,
       title: 'postModel',
@@ -173,8 +193,27 @@ export class CdkProjectStack extends cdk.Stack {
       required: ['gameName'],
       },
     });
-
-    const wishlistRequestModel = restAPI.addModel('WishlistRequestModel', {
+    
+    const modifyGameModel = restAPI.addModel('ModifyRequestModel', {
+      contentType: 'application/json',
+      modelName: 'ModifyRequestModel',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'postModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          id: { type: apigateway.JsonSchemaType.STRING },
+          gameName: { type: apigateway.JsonSchemaType.STRING },
+          yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
+          genre: { type: apigateway.JsonSchemaType.STRING },
+          developer: { type: apigateway.JsonSchemaType.STRING },
+          console: { type: apigateway.JsonSchemaType.STRING },          
+      },
+      required: ['gameName', 'id'],
+      },
+    });
+    
+    const getCollectionModel = restAPI.addModel('WishlistRequestModel', {
       contentType: 'application/json',
       modelName: 'WishlistRequestModel',
       schema: {
@@ -182,6 +221,21 @@ export class CdkProjectStack extends cdk.Stack {
       title: 'wishlistModel',
       type: apigateway.JsonSchemaType.OBJECT,
       properties: {
+          collectionID: { type: apigateway.JsonSchemaType.STRING },                 
+      },
+      required: ['collectionID'],
+      },
+    })
+
+    const addGameToWishlistModel = restAPI.addModel('WishlistAddRequestModel', {
+      contentType: 'application/json',
+      modelName: 'WishlistAddRequestModel',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'wishlistModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          collectionID: { type: apigateway.JsonSchemaType.STRING },
           gameName: { type: apigateway.JsonSchemaType.STRING },
           yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
           genre: { type: apigateway.JsonSchemaType.STRING },
@@ -190,9 +244,47 @@ export class CdkProjectStack extends cdk.Stack {
           desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
           desiredCondition: { type: apigateway.JsonSchemaType.STRING },                   
       },
-      required: ['gameName'],
+      required: ['gameName', 'collectionID'],
       },
     })
+
+    const modifyGameInWishlistModel = restAPI.addModel('WishlistModifyRequestModel', {
+      contentType: 'application/json',
+      modelName: 'WishlistModifyRequestModel',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'wishlistModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          id: { type: apigateway.JsonSchemaType.STRING },
+          collectionID: { type: apigateway.JsonSchemaType.STRING },
+          gameName: { type: apigateway.JsonSchemaType.STRING },
+          yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
+          genre: { type: apigateway.JsonSchemaType.STRING },
+          developer: { type: apigateway.JsonSchemaType.STRING },
+          console: { type: apigateway.JsonSchemaType.STRING },
+          desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
+          desiredCondition: { type: apigateway.JsonSchemaType.STRING },                   
+      },
+      required: ['gameName', 'id', 'collectionID'],
+      },
+    })
+    const addPriceMonitorToWishlistGame = restAPI.addModel('PriceMonitorRequestMondel', {
+      contentType: 'application/json',
+      modelName: 'addPriceMonitor',
+      schema: {
+      schema: apigateway.JsonSchemaVersion.DRAFT4,
+      title: 'wishlistModel',
+      type: apigateway.JsonSchemaType.OBJECT,
+      properties: {
+          id: { type: apigateway.JsonSchemaType.STRING },
+          collectionID: { type: apigateway.JsonSchemaType.STRING },
+          desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
+          desiredCondition: { type: apigateway.JsonSchemaType.STRING },                   
+      },
+      required: ['id', 'collectionID', 'desiredPrice', 'desiredCondition'],
+      }
+    });
 
     //Method definitions
     const getGame = restAPI.root.addResource("getGame").addMethod("GET", apiIntegration, {
@@ -201,7 +293,8 @@ export class CdkProjectStack extends cdk.Stack {
         authorizerId: authorizer.ref
       },
       requestParameters: {
-        "method.request.querystring.gameName": true
+        "method.request.querystring.gameName": true,
+        "method.request.querystring.id": true,        
       },
       requestValidator: new apigateway.RequestValidator(restAPI, 'get-request-validator', {
         restApi: restAPI,
@@ -222,7 +315,7 @@ export class CdkProjectStack extends cdk.Stack {
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': requestModel },
+      requestModels: { 'application/json': addGameModel },
       requestValidator: new apigateway.RequestValidator(restAPI, "create-request-validator", {
         restApi: restAPI,
         validateRequestBody: true,
@@ -235,7 +328,7 @@ export class CdkProjectStack extends cdk.Stack {
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': requestModel },
+      requestModels: { 'application/json': modifyGameModel },
       requestValidator: new apigateway.RequestValidator(restAPI, 'modify-request-validator', {
         restApi: restAPI,
         validateRequestBody: true,
@@ -248,7 +341,7 @@ export class CdkProjectStack extends cdk.Stack {
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': requestModel },
+      requestModels: { 'application/json': modifyGameModel },
       requestValidator: new apigateway.RequestValidator(restAPI, 'delete-request-validator', {
         restApi: restAPI,
         validateRequestBody: true,
@@ -261,16 +354,23 @@ export class CdkProjectStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
-      }
+      },
+      requestParameters: {
+        "method.request.querystring.collectionID": true,        
+      },
+      requestValidator: new apigateway.RequestValidator(restAPI, 'get-wishlist-request-validator', {
+        restApi: restAPI,
+        validateRequestBody: false,
+        validateRequestParameters: true,
+      })
     });
-    
     
     wishlistAPI.addResource("addGame").addMethod("POST", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': wishlistRequestModel },
+      requestModels: { 'application/json': addGameToWishlistModel },
       requestValidator: new apigateway.RequestValidator(restAPI, "addgame-wishlist-request-validator", {
         restApi: restAPI,
         validateRequestBody: true,
@@ -283,7 +383,7 @@ export class CdkProjectStack extends cdk.Stack {
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': wishlistRequestModel },
+      requestModels: { 'application/json': modifyGameInWishlistModel },
       requestValidator: new apigateway.RequestValidator(restAPI, "modifygame-wishlist-request-validator", {
         restApi: restAPI,
         validateRequestBody: true,
@@ -296,14 +396,51 @@ export class CdkProjectStack extends cdk.Stack {
       authorizer: {
         authorizerId: authorizer.ref
       },
-      requestModels: { 'application/json': wishlistRequestModel },
+      requestModels: { 'application/json': modifyGameInWishlistModel },
       requestValidator: new apigateway.RequestValidator(restAPI, "delete-game-wishlist-request-validator", {
         restApi: restAPI,
         validateRequestBody: true,
         validateRequestParameters: false,
       })
-    });    
-
+    });  
     
+    wishlistAPI.addResource("addPriceMonitor").addMethod("POST", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestModels: { 'application/json': addPriceMonitorToWishlistGame },
+      requestValidator: new apigateway.RequestValidator(restAPI, "addPriceMonitor-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });
+
+    wishlistAPI.addResource("modifyPriceMonitor").addMethod("PUT", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestModels: { 'application/json': addPriceMonitorToWishlistGame },
+      requestValidator: new apigateway.RequestValidator(restAPI, "modifyPriceMonitor-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });
+
+    wishlistAPI.addResource("deletePriceMonitor").addMethod("DELETE", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestModels: { 'application/json': addPriceMonitorToWishlistGame },
+      requestValidator: new apigateway.RequestValidator(restAPI, "deletePriceMonitor-wishlist-request-validator", {
+        restApi: restAPI,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      })
+    });
   } 
 }

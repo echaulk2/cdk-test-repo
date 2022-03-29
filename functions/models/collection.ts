@@ -1,10 +1,14 @@
 import { Game } from "./game";
 
 export class Collection {
-    partitionKey: string;
-    collectionType: string;
+    userID: string;
+    collectionID?: string;
+    collectionType?: string;
+    
 
-    constructor(userID:string) {
-        this.partitionKey = `[User]#[${userID}]`
+    constructor(userID:string, collectionID?:string, collectionType?:string) {
+        this.userID = userID;
+        this.collectionID = collectionID;
+        this.collectionType = collectionType;
     }
 }

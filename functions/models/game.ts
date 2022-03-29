@@ -2,32 +2,30 @@ import { GamePriceData } from "../models/gamePriceData";
 
 export class Game { 
     //Fields 
-    partitionKey: string;
-    sortKey: string;
-    itemType: string;
-    gameName: string;      
-    email: string;   
+    id: string;
+    userID: string;
+    email: string;
+    gameName?: string;
+    itemType?: string;
+    collectionID?: string;
     yearReleased?: number;
     genre?: string;
     console?: string;
     developer?: string;
-    desiredCondition?: string;
-    desiredPrice?: number;
-    gamePriceData?: GamePriceData;
+    gamePriceData?: [GamePriceData];
 
     //Constructor 
-    constructor(partitionKey:string, sortKey:string, itemType:string, gameName:string, email: string, yearReleased?:number, genre?:string, console?:string, developer?:string, desiredCondition?:string, desiredPrice?:number, gamePriceData?: GamePriceData) { 
-       this.partitionKey = partitionKey,
-       this.sortKey = sortKey,
-       this.itemType = itemType,
+    constructor(id: string, userID: string, email: string, gameName?:string, itemType?:string, collectionID?: string,  yearReleased?:number, genre?:string, console?:string, developer?:string, gamePriceData?: [GamePriceData]) { 
+       this.id = id,
+       this.userID = userID,
+       this.email = email,          
        this.gameName = gameName,
-       this.email = email,
+       this.itemType = itemType,
+       this.collectionID = collectionID,
        this.yearReleased = yearReleased,
        this.genre = genre,
        this.console = console,
        this.developer = developer,
-       this.desiredCondition = desiredCondition,
-       this.desiredPrice = desiredPrice,
        this.gamePriceData = gamePriceData
     }    
  }

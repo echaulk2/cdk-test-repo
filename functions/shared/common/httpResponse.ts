@@ -1,11 +1,13 @@
 import { Game } from "../../models/game"
 import { getGame, listGames, deleteGame, modifyGame, createGame } from "../../dataManager/gameManager";
 import { Wishlist } from "../../models/wishlist"; 
-import { getCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "../../dataManager/collectionManager";
+import { getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "../../dataManager/collectionManager";
 import * as Interfaces from "../interfaces/interfaces";
 import { GameError } from "../../error/gameErrorHandler";
-import { CollectionError } from "../../error/collectionErrorHandler";
 import { GamePriceError } from "../../error/gamePriceErrorHandler"
+import { GamePriceMonitor } from "../../models/gamePriceMonitor";
+import { createGamePriceMonitor, deleteGamePriceMonitor, modifyGamePriceMonitor } from "../../dataManager/gamePriceMonitor";
+import { createGamePriceData } from "../../dataManager/gamePriceDataManager";
 
 export async function getGameHttpResponse(game: Game) {
     try {
@@ -13,7 +15,7 @@ export async function getGameHttpResponse(game: Game) {
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GameError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Game not found.'});
+        return httpResponse({statusCode: 400, body: 'Game Error'});
       } else {
         return httpResponse({statusCode: err.statusCode, body: 'Error retrieving game.'})
       }
@@ -26,7 +28,7 @@ export async function getGameHttpResponse(game: Game) {
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GameError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to get game list.'});        
+        return httpResponse({statusCode: 400, body: 'Game Error'});        
       } else {
         return httpResponse({statusCode: err.statusCode, body: 'Error retrieving game list.'});        
       }
@@ -39,7 +41,7 @@ export async function getGameHttpResponse(game: Game) {
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GameError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to create game.  Game already exists.'});
+        return httpResponse({statusCode: 400, body: 'Game Error'});
       } else {
         return httpResponse({statusCode: err.statusCode, body: 'Error creating game.'})
       }
@@ -52,7 +54,7 @@ export async function getGameHttpResponse(game: Game) {
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GameError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to modify game.  Game not found.'});
+        return httpResponse({statusCode: 400, body: 'Game Error'});
       } else {
         return httpResponse({statusCode: err.statusCode, body: 'Error modifying game.'})
       }
@@ -65,71 +67,132 @@ export async function getGameHttpResponse(game: Game) {
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GameError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to delete game.  Game not found.'});
+        return httpResponse({statusCode: 400, body: 'Game Error'});
       } else {
         return httpResponse({statusCode: err.statusCode, body: 'Error deleting game.'})
       }
     }
   }
   
-  export async function getWishlistHttpResponse(userID: string) {
+  export async function getWishlistHttpResponse(wishlist: Wishlist) {
     try {
-      let wishlist = new Wishlist(userID);
-      let response = await getCollection(wishlist);
+      let response = await getAllGamesInCollection(wishlist);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
-      if (err instanceof CollectionError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to get Wishlist.'});
-      } else if (err instanceof GamePriceError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving game price data'});
+      if (err instanceof GamePriceError) {
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
       } else {
-        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving Wishlist.'})
+        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving wishlist.'})
       }
     }
   }
-  export async function addGameToWishlistHttpResponse(game: Game, userData: Interfaces.IUserData) {
+  export async function addGameToWishlistHttpResponse(game: Game, wishlist: Wishlist) {
     try {
-      let wishlist = new Wishlist(userData.userID);
       let response = await addGameToCollection(game, wishlist);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving game price data'});
-      } else if (err instanceof GameError) { 
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to create game'});
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
       } else {
-        return httpResponse({statusCode: err.statusCode, body: 'Error adding game to Wishlist.'})
+        return httpResponse({statusCode: err.statusCode, body: 'Error adding game to wishlist.'})
       }
     }
   }
   
-  export async function modifyGameInWishlistHttpResponse(game: Game, userData: Interfaces.IUserData) {
+  export async function modifyGameInWishlistHttpResponse(game: Game, wishlist: Wishlist) {
     try {
-      let wishlist = new Wishlist(userData.userID);
       let response = await modifyGameInCollection(game, wishlist);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Error modifying game price data'});
-      } else if (err instanceof GameError) { 
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to modify game'});
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
       } else {
-        return httpResponse({statusCode: err.statusCode, body: 'Error modifying game in Wishlist.'})
+        return httpResponse({statusCode: err.statusCode, body: 'Error modifying game in wishlist.'})
       }
     }
   }
-  export async function removeGameFromWishlistHttpResponse(game: Game, userData: Interfaces.IUserData) {
+  export async function removeGameFromWishlistHttpResponse(game: Game, wishlist: Wishlist) {
     try {
-      let wishlist = new Wishlist(userData.userID);    
       let response = await removeGameFromCollection(game, wishlist);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Error deleting game price data'});
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
       } else if (err instanceof GameError) {
-        return httpResponse({statusCode: err.statusCode, body: 'Unable to delete game'});
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
       } else {
-        return httpResponse({statusCode: err.statusCode, body: 'Error deleting game from Wishlist.'})
+        return httpResponse({statusCode: err.statusCode, body: 'Error removing game from wishlist.'})
+      }
+    }
+  }
+  
+  export async function addPriceMonitorToWishlistHttpResponse(gamePriceMonitor: GamePriceMonitor) {
+    try {
+      let priceMonitor = await createGamePriceMonitor(gamePriceMonitor)
+      if (priceMonitor) {
+        priceMonitor.gamePriceData = await createGamePriceData(priceMonitor);         
+      }
+      return httpResponse({statusCode: 200, body: JSON.stringify(priceMonitor)});
+    } catch (err: any) {
+      if (err instanceof GamePriceError) {
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error adding Price Monitor'})
+      }
+    }
+  }
+
+  export async function modifyPriceMonitorWishlistHttpResponse(gamePriceMonitor: GamePriceMonitor) {
+    try {
+      let priceMonitor = await modifyGamePriceMonitor(gamePriceMonitor)
+      if (priceMonitor) {
+        priceMonitor.gamePriceData = await createGamePriceData(priceMonitor);         
+      }
+      return httpResponse({statusCode: 200, body: JSON.stringify(priceMonitor)});
+    } catch (err: any) {
+      if (err instanceof GamePriceError) {
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error modifying price monitor'})
+      }
+    }
+  }
+
+  export async function deletePriceMonitorWishlistHttpResponse(gamePriceMonitor: GamePriceMonitor) {
+    try {
+      let priceMonitor = await deleteGamePriceMonitor(gamePriceMonitor)
+      return httpResponse({statusCode: 200, body: JSON.stringify(priceMonitor)});
+    } catch (err: any) {
+      if (err instanceof GamePriceError) {
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error deleting price monitor'})
       }
     }
   }

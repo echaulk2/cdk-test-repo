@@ -4,94 +4,80 @@ import { PriceCharting } from "./priceChartingDataManager";
 import * as Config from "../shared/config/config";
 import * as Common from "../shared/common/gamePriceData";
 import { GamePriceData } from "../models/gamePriceData";
+import { GamePriceMonitor } from "../models/gamePriceMonitor";
+import { getGameInCollection } from "./collectionManager";
+import { Wishlist } from "../models/wishlist";
 
-export async function createGamePriceData(game: Game) : Promise<GamePriceData> {
-    let gamePriceData = await new PriceCharting().getPriceData(game);
+export async function createGamePriceData(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
+    console.log('hello world');
+    let game = new Game(gamePriceMonitor.id, gamePriceMonitor.userID, gamePriceMonitor.email);
+    let collection = new Wishlist(gamePriceMonitor.userID, gamePriceMonitor.collectionID);
+    let gameData = await getGameInCollection(game, collection);
+    let gamePriceData = await new PriceCharting().getPriceData(gameData, gamePriceMonitor);
+
     try {
         let params = {
           TableName: Config.table,
           Item: {
-            partitionKey: game.partitionKey,
-            sortKey: `[GamePriceData]#[${game.gameName}]`,
-            itemType: '[GamePriceData]',
+            partitionKey: gamePriceMonitor.id,
+            sortKey: `[GamePriceData]#[${gamePriceMonitor.id}]#[${gamePriceMonitor.desiredCondition}]#[${Date.parse(gamePriceData.lastChecked)}]`,
+            itemType: `[GamePriceData]#[${gamePriceMonitor.desiredCondition}]`,
+            collectionID: gamePriceMonitor.collectionID,
+            desiredPrice: gamePriceMonitor.desiredPrice,
+            desiredCondition: gamePriceMonitor.desiredCondition,
+            desiredPriceExists: gamePriceData.desiredPriceExists,
+            lastChecked: gamePriceData.lastChecked,
             lowestPrice: gamePriceData.lowestPrice,
             averagePrice: gamePriceData.averagePrice,
             listedItemTitle: gamePriceData.listedItemTitle,
             listedItemURL: gamePriceData.listedItemURL,
             listedItemConsole: gamePriceData.listedItemConsole,
-            lastChecked: gamePriceData.lastChecked
-          },
-          ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
+            expirationDate: Common.generateTimeToLive(gamePriceData.lastChecked)
+          }
         }
         let response = await Config.docClient.put(params).promise();
-        let priceDataResponse = await getGamePriceData(game);
+        let priceDataResponse = await getLatestGamePriceData(gamePriceMonitor);
         return priceDataResponse;
       } catch(err: any) {
         switch (err.code) {
           case ("ConditionalCheckFailedException"):
-            throw new GamePriceError("Unable to create game price data.  Conditional Check Failed.", 400);
+            throw new GamePriceError("Unable to create game price data.  Conditional Check Failed.");
           default:
             throw err;
         }
       }
 }
 
-export async function getGamePriceData(game: Game) : Promise<GamePriceData> {
-    let sortKey = `[GamePriceData]#[${game.gameName}]`;
-    let params = {
-        TableName: Config.table,
-        Key: {
-            partitionKey: game.partitionKey,
-            sortKey: `[GamePriceData]#[${game.gameName}]`,
-        },
-        KeyConditionExpression: `sortKey = ${sortKey} AND partitionKey = ${game.partitionKey}`
-    }
-        
-    try {
-        let response = await Config.docClient.get(params).promise();
-        let gamePriceData = Common.deserializeGamePriceData(response.Item);
-        return gamePriceData;
-    } catch (err: any) {
-        switch (err.code) {
-          case ("ConditionalCheckFailedException"):
-            throw new GamePriceError("Unable to find game price data.  Conditional Check Failed.", 400);
-          default:
-            throw err;
-        }
-    }
-}
+export async function getLatestGamePriceData(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
+  let sortKey = `[GamePriceData]#[${gamePriceMonitor.id}]#[${gamePriceMonitor.desiredCondition}]`;
 
-export async function modifyGamePriceData(game: Game) : Promise<GamePriceData> { 
-    try {
-      await deleteGamePriceData(game);
-      return await createGamePriceData(game);
-    } catch (err: any) {
-      throw err;
-    }
-  }
-
-  export async function deleteGamePriceData(game: Game) : Promise<GamePriceData> {
-    let params = {
+  let params = {
       TableName: Config.table,
-      Key: {
-        partitionKey: game.partitionKey,
-        sortKey: `[GamePriceData]#[${game.gameName}]`
+      KeyConditionExpression: "#partitionKey = :partitionKey AND begins_with(#sortKey, :sortKey)",
+      ExpressionAttributeNames: {
+        "#partitionKey": "partitionKey",
+        "#sortKey": "sortKey"
       },
-      KeyConditionExpression: `sortKey = ${game.sortKey} AND partitionKey = ${game.partitionKey}`,
-      ConditionExpression: 'attribute_exists(sortKey) and attribute_exists(partitionKey)',
-      ReturnValues: 'ALL_OLD'
-    };
-  
-    try {
-      let response = await Config.docClient.delete(params).promise();
-      let gamePriceData = Common.deserializeGamePriceData(response.Attributes);
-      return gamePriceData;      
-    } catch (err: any) {
+      ExpressionAttributeValues: {
+        ":partitionKey": gamePriceMonitor.id,
+        ":sortKey": sortKey
+      }
+  }
+      
+  try {
+      let response = await Config.docClient.query(params).promise();
+      let gamePriceData = [] as any;
+      if (response.Items) {
+        let index = response.Items.length - 1;
+        gamePriceData = Common.deserializeGamePriceData(response.Items[index]);
+      }
+      return gamePriceData;
+  } catch (err: any) {
       switch (err.code) {
         case ("ConditionalCheckFailedException"):
-          throw new GamePriceError("Unable to delete game price data.  Conditional Check Failed.", 400);
+          throw new GamePriceError("Unable to find game price data.  Conditional Check Failed.");
         default:
           throw err;
       }
-    }
   }
+}
