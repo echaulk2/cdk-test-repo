@@ -1,23 +1,27 @@
 import { GamePriceMonitor } from "../models/gamePriceMonitor";
+import { Collection } from "../models/collection";
 import * as Config from "../shared/config/config";
 import * as CommonGame from "../shared/common/game";
 import * as Common from "../shared/common/gamePriceMonitor";
-import { createGamePriceData } from "./gamePriceDataManager";
 import  { GamePriceMonitorError } from "../error/gamePriceMonitorErrorHandler";
+import { Game } from "../models/game";
 
 export async function createGamePriceMonitor(gamePriceMonitor: GamePriceMonitor) {
     try {
       let params = {
         TableName: Config.table,
         Item: {
-            partitionKey: gamePriceMonitor.id,
-            sortKey: `[GamePriceMonitor]#[${gamePriceMonitor.desiredCondition}]`,
+            partitionKey: gamePriceMonitor.userID,
+            sortKey: `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]`,
+            GS1: gamePriceMonitor.priceMonitorID,
+            priceMonitorID: gamePriceMonitor.priceMonitorID,
             userID: gamePriceMonitor.userID,
-            email: gamePriceMonitor.email,
-            itemType: `[GamePriceMonitor]`,
+            gameID: gamePriceMonitor.gameID,
             collectionID: gamePriceMonitor.collectionID,
+            itemType: `[GamePriceMonitor]`,
             desiredCondition: gamePriceMonitor.desiredCondition,
             desiredPrice: gamePriceMonitor.desiredPrice
+            
         },
         ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
     }
@@ -36,8 +40,8 @@ export async function createGamePriceMonitor(gamePriceMonitor: GamePriceMonitor)
 
 export async function modifyGamePriceMonitor(gamePriceMonitor: GamePriceMonitor) {
   try {
-    let partitionKey = gamePriceMonitor.id;
-    let sortKey = `[GamePriceMonitor]#[${gamePriceMonitor.desiredCondition}]`; 
+    let partitionKey = gamePriceMonitor.userID;
+    let sortKey = `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]`; 
     let template = await CommonGame.generateModifyExpression(gamePriceMonitor);
   
     let params = {
@@ -67,8 +71,8 @@ export async function modifyGamePriceMonitor(gamePriceMonitor: GamePriceMonitor)
 }
 
 export async function deleteGamePriceMonitor(gamePriceMonitor: GamePriceMonitor) {
-  let partitionKey = gamePriceMonitor.id;
-  let sortKey = `[GamePriceMonitor]#[${gamePriceMonitor.desiredCondition}]`; 
+  let partitionKey = gamePriceMonitor.userID;
+  let sortKey = `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]`; 
   let params = {
     TableName: Config.table,
     Key: {
@@ -95,8 +99,8 @@ export async function deleteGamePriceMonitor(gamePriceMonitor: GamePriceMonitor)
 }
 
 export async function getGamePriceMonitor(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceMonitor> {
-  let partitionKey = gamePriceMonitor.id;
-  let sortKey = `[GamePriceMonitor]#[${gamePriceMonitor.desiredCondition}]`;
+  let partitionKey = gamePriceMonitor.userID;
+  let sortKey = `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]`;
   let params = {
     TableName: Config.table,
     Key: {
@@ -123,27 +127,28 @@ export async function getGamePriceMonitor(gamePriceMonitor: GamePriceMonitor) : 
   }
 }
 
-export async function getAllPriceMonitorsForGame(id: string) : Promise<[GamePriceMonitor]> {
-    let params = {
-      TableName: Config.table,
-      KeyConditionExpression: "#partitionKey = :partitionKey and begins_with(#sortKey, :sortKey)",
-      ExpressionAttributeNames: {
-          "#partitionKey": "partitionKey",
-          "#sortKey": "sortKey"
-      },
-      ExpressionAttributeValues: {
-          ":partitionKey": id,
-          ":sortKey": "[GamePriceMonitor]"
-      }
-    };
-    
-    let paginatedData = await CommonGame.getPaginatedData(params);
-    let gamePriceMonitorList = [] as any;
-    if (paginatedData.length > 0) {
-      for (let data of paginatedData) {
-        let gamePriceMonitor = Common.deserializeGamePriceMonitorData(data);
-        gamePriceMonitorList.push(gamePriceMonitor);
-      }
+export async function getAllPriceMonitorsForGame(game: Game) : Promise<[GamePriceMonitor]> {
+  let params = {
+    TableName: Config.table,
+    IndexName: "itemTypeIndex",
+    KeyConditionExpression: "#itemType = :itemType and begins_with(#sortKey, :sortKey)",
+    ExpressionAttributeNames: {
+        "#itemType": "itemType",
+        "#sortKey": "sortKey"
+    },
+    ExpressionAttributeValues: {
+        ":itemType": "[GamePriceMonitor]",
+        ":sortKey": `[Collection]#[${game.collectionID}]#[Game]#[${game.gameID}]#[GamePriceMonitor]`
     }
-    return gamePriceMonitorList;
+  };
+  
+  let paginatedData = await CommonGame.getPaginatedData(params);
+  let gamePriceMonitorList = [] as any;
+  if (paginatedData.length > 0) {
+    for (let data of paginatedData) {
+      let gamePriceMonitor = Common.deserializeGamePriceMonitorData(data);
+      gamePriceMonitorList.push(gamePriceMonitor);
+    }
   }
+  return gamePriceMonitorList;
+}

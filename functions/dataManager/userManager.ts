@@ -1,43 +1,39 @@
-import { Game } from "../models/game";
-import { GameError } from "../error/gameErrorHandler";
+import * as Common from "../shared/common/user";
+import * as CommonGame from "../shared/common/game";
 import * as Config from "../shared/config/config";
-import * as Common from "../shared/common/game";
+import { User } from "../models/user";
+import { UserError } from "../error/userErrorHandler";
 
-  export async function createGame(game: Game): Promise<Game> {
+export async function createUser(user: User): Promise<User> {
     try {
       let params = {
         TableName: Config.table,
         Item: {
-          partitionKey: game.userID,
-          sortKey: `[Game]#[${game.gameID}]`,
-          GS1: game.gameID,
-          gameID: game.gameID,
-          gameName: game.gameName,        
-          itemType: '[Game]',
-          userID: game.userID,
-          genre: game.genre,
-          yearReleased: game.yearReleased,
-          developer: game.developer,
-          console: game.console
+          partitionKey: user.userID,
+          sortKey: `[User]#[${user.userID}]`,
+          GS1: user.userID,
+          userID: user.userID,
+          email: user.email,
+          itemType: "[User]"
         },
         ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
       }
       let response = await Config.docClient.put(params).promise();
-      let createdGame = await getGame(game);
-      return createdGame;
+      let createdUser = await getUser(user.userID);
+      return createdUser;
     } catch(err: any) {
       switch (err.code) {
         case ("ConditionalCheckFailedException"):
-          throw new GameError("Unable to create game.  Conditional Check Failed.");
+          throw new UserError("Unable to create user.  Conditional Check Failed.");
         default:
           throw err;
       }
     }
   }
 
- export async function getGame(game: Game) : Promise<Game> {
-    let partitionKey = game.userID;
-    let sortKey = `[Game]#[${game.gameID}]`;
+ export async function getUser(userID: string) : Promise<User> {
+    let partitionKey = userID;
+    let sortKey = `[User]#[${userID}]`;
     let params = {
       TableName: Config.table,
       Key: {
@@ -50,50 +46,48 @@ import * as Common from "../shared/common/game";
     try {
       let response = await Config.docClient.get(params).promise();
       if (response.Item) {
-        return Common.deserializeGameData(response.Item);
+        return Common.deserializeUserData(response.Item);
       } else {
-        throw new GameError("Unable to get game. Game not found.");
+        throw new Error("Unable to get user. User not found.");
       }      
     } catch (err: any) {
       switch (err.code) {
         case ("ConditionalCheckFailedException"):
-          throw new GameError("Unable to get game.  Conditional Check Failed.");
+          throw new UserError("Unable to get user.  Conditional Check Failed.");
         default:
           throw err;
       }
     }
   }
 
-  export async function listGames(userID: string) : Promise<[Game]> {
+  export async function listUsers() : Promise<[User]> {
     let params = {
       TableName: Config.table,
-      IndexName: "GSI-2",
-      KeyConditionExpression: "#partitionKey = :partitionKey AND begins_with(#GS1, :GS1)",
+      IndexName: "itemTypeIndex",
+      KeyConditionExpression: "#itemType = :itemType",
       ExpressionAttributeNames: {
-          "#partitionKey": "partitionKey",
-          "#GS1": "GS1"
+          "#itemType": "itemType"
       },
       ExpressionAttributeValues: {
-          ":partitionKey": `${userID}`,
-          ":GS1": "G-"
+          ":itemType": "[User]"
       }
     };
     
-    let paginatedData = await Common.getPaginatedData(params);
+    let paginatedData = await CommonGame.getPaginatedData(params);
     let gameList = [] as any;
     if (paginatedData.length > 0) {
-      for (let game of paginatedData) {
-        let returnedGame = Common.deserializeGameData(game);
+      for (let user of paginatedData) {
+        let returnedGame = Common.deserializeUserData(user);
         gameList.push(returnedGame);
       }
     }
     return gameList;
   }
   
-  export async function modifyGame(game: Game) { 
-    let partitionKey = game.userID;
-    let sortKey = `[Game]#[${game.gameID}]`;
-    let template = await Common.generateModifyExpression(game);
+  export async function modifyUser(userID: string) { 
+    let partitionKey = userID;
+    let sortKey = `[User]#[${userID}]` 
+    let template = await CommonGame.generateModifyExpression(game);
 
     let params = {
       TableName: Config.table,
@@ -111,21 +105,21 @@ import * as Common from "../shared/common/game";
   
     try {
       let response = await Config.docClient.update(params).promise();
-      let modifiedGame = await getGame(game);
-      return modifiedGame;
+      let modifiedUser = await getUser(userID);
+      return modifiedUser;
     } catch (err: any) {
       switch (err.code) {
         case ("ConditionalCheckFailedException"):
-          throw new GameError("Unable to modify game.  Conditional Check Failed.");
+          throw new UserError("Unable to modify user.  Conditional Check Failed.");
         default:
           throw err;
       }
     }
   }
   
-  export async function deleteGame(game: Game) {
-    let partitionKey = game.userID;
-    let sortKey = `[Game]#[${game.gameID}]`;
+  export async function deleteUser(userID: string) {
+    let partitionKey = userID;
+    let sortKey = `[User]#[${userID}]`;
     let params = {
       TableName: Config.table,
       Key: {
@@ -139,12 +133,12 @@ import * as Common from "../shared/common/game";
   
     try {
       let response = await Config.docClient.delete(params).promise();
-      let game = Common.deserializeGameData(response.Attributes);
-      return game;      
+      let deletedUser = Common.deserializeUserData(response.Attributes);
+      return deletedUser;      
     } catch (err: any) {
       switch (err.code) {
         case ("ConditionalCheckFailedException"):
-          throw new GameError("Unable to delete game.  Conditional Check Failed.");
+          throw new UserError("Unable to delete user.  Conditional Check Failed.");
         default:
           throw err;
       }

@@ -9,8 +9,8 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
   }
 
   export interface IPayloadData {
-    id: string,
-    gameName: string,
+    gameID: string,
+    gameName?: string,
     collectionID?: string,
     yearReleased?: number,
     genre?: string,
@@ -21,16 +21,18 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
  }
 
   export interface IDynamoGameItem {
-     id: string,
-     collectionID: string,
-     gameName: string,
+     partitionKey: string,
+     sortKey: string,
+     GS1: string,
+     gameID: string,
      userID: string,
-     email: string,
      itemType: string,
+     gameName: string,
      yearReleased?: number,
      genre?: string,
      console?: string,
      developer?: string,
+     collectionID?: string,
      desiredCondition?: string,
      desiredPrice?: number
   }
@@ -52,6 +54,8 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
 
   export interface IDynamoPriceData {
     partitionKey: string;
+    gamePriceDataID: string;
+    priceMonitorID: string;
     gameName: string;
     itemType: string;
     desiredPrice: string;
@@ -77,12 +81,14 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
     ExpressionAttributeNames: {
       "#partitionKey"?: string,
       "#sortKey"?: string,
-      "#itemType"?: string
+      "#itemType"?: string,
+      "#GS1"?: string
     },
     ExpressionAttributeValues: {
       ":partitionKey"?: string,
       ":sortKey"?: string,
-      ":itemType"?: string
+      ":itemType"?: string,
+      ":GS1"?: string
     },
     ExclusiveStartKey?: string,
     LastEvaluatedKey?: string
@@ -91,18 +97,36 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
   export interface IDynamoGamePriceMonitor {
     partitionKey: string,
     sortKey: string,
+    GS1: string,
+    priceMonitorID: string,
+    gameID: string,
     collectionID: string,
     userID: string,
-    email: string,
+    itemType: string,
     desiredCondition: string,
     desiredPrice: number
   }
 
   export interface IJSONGamePriceMonitor {
-    id: string,
+    priceMonitorID: string,
+    gameID: string,
     collectionID: string,
     userID: string,
-    email: string,
     desiredCondition: string,
     desiredPrice: number
+  }
+  
+  export interface ICollection {
+    partitionKey: string,
+    sortKey: string,
+    GS1: string,
+    collectionID: string
+  }
+
+  export interface IDynamoUser {
+    partitionKey: string,
+    sortKey: string,
+    GS1: string,
+    userID: string,
+    email: string
   }

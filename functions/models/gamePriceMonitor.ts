@@ -1,19 +1,19 @@
 import { GamePriceData } from "./gamePriceData";
 
 export class GamePriceMonitor {
-    id: string;
-    collectionID: string;
+    priceMonitorID: string;
     userID: string;
-    email: string;
+    collectionID: string;
+    gameID: string;
     desiredCondition: string;
     desiredPrice: number;
     gamePriceData?: GamePriceData;
 
-    constructor(id:string, collectionID:string, userID:string, email:string, desiredCondition:string, desiredPrice:number, gamePriceData?: GamePriceData) {
-        this.id = id,
-        this.collectionID = collectionID,
+    constructor(priceMonitorID:string, userID:string, collectionID:string, gameID: string, desiredCondition:string, desiredPrice:number, gamePriceData?: GamePriceData) {
+        this.priceMonitorID = priceMonitorID,
         this.userID = userID,
-        this.email = email,
+        this.collectionID = collectionID,
+        this.gameID = gameID,
         this.desiredCondition = desiredCondition,
         this.desiredPrice = desiredPrice,
         this.gamePriceData = gamePriceData

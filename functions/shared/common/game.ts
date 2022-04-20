@@ -24,16 +24,16 @@ export function generateModifyExpression(dynamoObject: any) : Interfaces.IUpdate
 }
 
 export function deserializeGameData(data: Interfaces.IDynamoGameItem) : Game {
-  return new Game(data.id, data.userID, data.email, data.gameName, data.itemType, data?.collectionID, data?.yearReleased, data?.genre, data?.console, data?.developer);
+  return new Game(data.gameID, data.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.collectionID);
 }
 
 export function serializeExistingGameData(userData: Interfaces.IUserData, data: Interfaces.IPayloadData) : Game {
-  return new Game(data.id, userData.userID, userData.email, data.gameName, undefined, data?.collectionID, data?.yearReleased, data?.genre, data?.console, data?.developer);
+  return new Game(data.gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.collectionID);
 }
 
 export function serializeNewGameData(userData: Interfaces.IUserData, data: Interfaces.IPayloadData) : Game {
-  let id = Config.uuidv4();
-  return new Game(id, userData.userID, userData.email, data.gameName, undefined, data?.collectionID, data?.yearReleased, data?.genre, data?.console, data?.developer);
+  let gameID = `G-${Config.uuidv4()}`;
+  return new Game(gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.collectionID);
 }
 
 export async function getPaginatedData(params: Interfaces.IPaginatedParams) : Promise<Array<any>>{

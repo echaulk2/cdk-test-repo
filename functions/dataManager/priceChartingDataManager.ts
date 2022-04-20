@@ -53,6 +53,7 @@ export class PriceCharting implements Interfaces.IPriceProviders {
             }
           });
           priceData.lastChecked = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+          priceData.gamePriceDataID = `PD-${Date.parse(priceData.lastChecked).toString()}`;
           return priceData;
         } catch (err) {
             throw new GamePriceError("Error gathering PriceCharting game price data");

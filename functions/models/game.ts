@@ -1,31 +1,28 @@
-import { GamePriceData } from "../models/gamePriceData";
+import { GamePriceMonitor } from "./gamePriceMonitor";
 
 export class Game { 
     //Fields 
-    id: string;
+    gameID: string;
     userID: string;
-    email: string;
     gameName?: string;
-    itemType?: string;
-    collectionID?: string;
     yearReleased?: number;
     genre?: string;
     console?: string;
-    developer?: string;
-    gamePriceData?: [GamePriceData];
+    developer?: string;    
+    collectionID?: string;
+    priceMonitorData?: [GamePriceMonitor];
 
     //Constructor 
-    constructor(id: string, userID: string, email: string, gameName?:string, itemType?:string, collectionID?: string,  yearReleased?:number, genre?:string, console?:string, developer?:string, gamePriceData?: [GamePriceData]) { 
-       this.id = id,
-       this.userID = userID,
-       this.email = email,          
+    constructor(gameID: string, userID: string, gameName?:string, yearReleased?:number, genre?:string, console?:string, developer?:string, collectionID?:string, priceMonitorData?: [GamePriceMonitor]) { 
+       this.gameID = gameID,
+       this.userID = userID,      
        this.gameName = gameName,
-       this.itemType = itemType,
-       this.collectionID = collectionID,
        this.yearReleased = yearReleased,
        this.genre = genre,
        this.console = console,
-       this.developer = developer,
-       this.gamePriceData = gamePriceData
+       this.developer = developer,       
+       this.collectionID = collectionID,
+       this.priceMonitorData = priceMonitorData
     }    
  }
+

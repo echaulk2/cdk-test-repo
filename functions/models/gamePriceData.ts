@@ -1,7 +1,7 @@
 export class GamePriceData {
-    id: string;
+    gamePriceDataID: string;
+    priceMonitorID: string;
     gameName: string;
-    itemType: string;
     desiredPrice: string;
     desiredCondition: string;
     desiredPriceExists: boolean;
@@ -12,10 +12,10 @@ export class GamePriceData {
     listedItemURL?: string;
     listedItemConsole?: string;
 
-    constructor(id:string, gameName:string, itemType:string, desiredPrice:string, desiredCondition:string, desiredPriceExists:boolean, lastChecked:string, lowestPrice?:string, averagePrice?:string, listedItemTitle?:string, listedItemURL?:string, listedItemConsole?:string) {
-        this.id = id,
+    constructor(gamePriceDataID:string, priceMonitorID:string, gameName:string, desiredPrice:string, desiredCondition:string, desiredPriceExists:boolean, lastChecked:string, lowestPrice?:string, averagePrice?:string, listedItemTitle?:string, listedItemURL?:string, listedItemConsole?:string) {
+        this.gamePriceDataID = gamePriceDataID,
+        this.priceMonitorID = priceMonitorID,
         this.gameName = gameName,
-        this.itemType = itemType,
         this.desiredPrice = desiredPrice,
         this.desiredCondition = desiredCondition,
         this.desiredPriceExists = desiredPriceExists,

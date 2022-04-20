@@ -6,23 +6,26 @@ import * as Common from "../shared/common/gamePriceData";
 import { GamePriceData } from "../models/gamePriceData";
 import { GamePriceMonitor } from "../models/gamePriceMonitor";
 import { getGameInCollection } from "./collectionManager";
-import { Wishlist } from "../models/wishlist";
 
 export async function createGamePriceData(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
-    console.log('hello world');
-    let game = new Game(gamePriceMonitor.id, gamePriceMonitor.userID, gamePriceMonitor.email);
-    let collection = new Wishlist(gamePriceMonitor.userID, gamePriceMonitor.collectionID);
-    let gameData = await getGameInCollection(game, collection);
+    let game: Game = {
+      gameID: gamePriceMonitor.gameID,
+      userID: gamePriceMonitor.userID,
+      collectionID: gamePriceMonitor.collectionID
+    };
+    let gameData = await getGameInCollection(game);
     let gamePriceData = await new PriceCharting().getPriceData(gameData, gamePriceMonitor);
 
     try {
         let params = {
           TableName: Config.table,
           Item: {
-            partitionKey: gamePriceMonitor.id,
-            sortKey: `[GamePriceData]#[${gamePriceMonitor.id}]#[${gamePriceMonitor.desiredCondition}]#[${Date.parse(gamePriceData.lastChecked)}]`,
-            itemType: `[GamePriceData]#[${gamePriceMonitor.desiredCondition}]`,
-            collectionID: gamePriceMonitor.collectionID,
+            partitionKey: gamePriceMonitor.userID,
+            sortKey: `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]#[GamePriceData]#[${gamePriceData.gamePriceDataID}]`,
+            GS1: gamePriceData.gamePriceDataID,
+            gamePriceDataID: gamePriceData.gamePriceDataID,
+            priceMonitorID: gamePriceMonitor.priceMonitorID,
+            itemType: `[GamePriceData]`,
             desiredPrice: gamePriceMonitor.desiredPrice,
             desiredCondition: gamePriceMonitor.desiredCondition,
             desiredPriceExists: gamePriceData.desiredPriceExists,
@@ -49,7 +52,7 @@ export async function createGamePriceData(gamePriceMonitor: GamePriceMonitor) : 
 }
 
 export async function getLatestGamePriceData(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
-  let sortKey = `[GamePriceData]#[${gamePriceMonitor.id}]#[${gamePriceMonitor.desiredCondition}]`;
+  let sortKey = `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]#[GamePriceData]`;
 
   let params = {
       TableName: Config.table,
@@ -59,17 +62,18 @@ export async function getLatestGamePriceData(gamePriceMonitor: GamePriceMonitor)
         "#sortKey": "sortKey"
       },
       ExpressionAttributeValues: {
-        ":partitionKey": gamePriceMonitor.id,
+        ":partitionKey": gamePriceMonitor.userID,
         ":sortKey": sortKey
-      }
+      },
+      ScanIndexForward: false,
+      Limit: 1
   }
       
   try {
       let response = await Config.docClient.query(params).promise();
       let gamePriceData = [] as any;
       if (response.Items) {
-        let index = response.Items.length - 1;
-        gamePriceData = Common.deserializeGamePriceData(response.Items[index]);
+        gamePriceData = Common.deserializeGamePriceData(response.Items[0]);
       }
       return gamePriceData;
   } catch (err: any) {

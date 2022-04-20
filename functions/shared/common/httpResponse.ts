@@ -1,13 +1,16 @@
 import { Game } from "../../models/game"
 import { getGame, listGames, deleteGame, modifyGame, createGame } from "../../dataManager/gameManager";
 import { Wishlist } from "../../models/wishlist"; 
-import { getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "../../dataManager/collectionManager";
+import { createCollection, getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "../../dataManager/collectionManager";
 import * as Interfaces from "../interfaces/interfaces";
 import { GameError } from "../../error/gameErrorHandler";
 import { GamePriceError } from "../../error/gamePriceErrorHandler"
 import { GamePriceMonitor } from "../../models/gamePriceMonitor";
 import { createGamePriceMonitor, deleteGamePriceMonitor, modifyGamePriceMonitor } from "../../dataManager/gamePriceMonitor";
 import { createGamePriceData } from "../../dataManager/gamePriceDataManager";
+import { User } from "../../models/user";
+import { createUser } from "../../dataManager/userManager";
+import { UserError } from "../../error/userErrorHandler";
 
 export async function getGameHttpResponse(game: Game) {
     try {
@@ -73,6 +76,22 @@ export async function getGameHttpResponse(game: Game) {
       }
     }
   }
+  export async function createWishlistHttpResponse(wishlist: Wishlist) {
+    try {
+      let response = await createCollection(wishlist);
+      return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+    } catch (err: any) {
+      if (err instanceof GamePriceError) {
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving wishlist.'})
+      }
+    }
+  }
   
   export async function getWishlistHttpResponse(wishlist: Wishlist) {
     try {
@@ -90,9 +109,10 @@ export async function getGameHttpResponse(game: Game) {
       }
     }
   }
-  export async function addGameToWishlistHttpResponse(game: Game, wishlist: Wishlist) {
+
+  export async function addGameToWishlistHttpResponse(game: Game) {
     try {
-      let response = await addGameToCollection(game, wishlist);
+      let response = await addGameToCollection(game);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {
@@ -107,9 +127,9 @@ export async function getGameHttpResponse(game: Game) {
     }
   }
   
-  export async function modifyGameInWishlistHttpResponse(game: Game, wishlist: Wishlist) {
+  export async function modifyGameInWishlistHttpResponse(game: Game) {
     try {
-      let response = await modifyGameInCollection(game, wishlist);
+      let response = await modifyGameInCollection(game);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {
@@ -123,9 +143,9 @@ export async function getGameHttpResponse(game: Game) {
       }
     }
   }
-  export async function removeGameFromWishlistHttpResponse(game: Game, wishlist: Wishlist) {
+  export async function removeGameFromWishlistHttpResponse(game: Game) {
     try {
-      let response = await removeGameFromCollection(game, wishlist);
+      let response = await removeGameFromCollection(game);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {
@@ -197,6 +217,18 @@ export async function getGameHttpResponse(game: Game) {
     }
   }
   
+  export async function createUserHttpResponse(user: User) {
+    try {
+      let response = await createUser(user);
+      return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+    } catch (err: any) {
+      if (err instanceof UserError) {
+        return httpResponse({statusCode: 400, body: 'User Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error creating user.'})
+      }
+    }
+  }
   export function httpResponse(data: Interfaces.IHttpResponse) : {} {
     return {
       statusCode: data.statusCode,

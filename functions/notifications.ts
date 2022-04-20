@@ -3,18 +3,19 @@ import { CollectionError } from "./error/collectionErrorHandler";
 import { GamePriceError } from "./error/gamePriceErrorHandler";
 import { httpResponse } from "./shared/common/httpResponse";
 import * as Common from "./shared/common/collection";
-import { Wishlist } from "./models/wishlist";
 import { getAllPriceMonitorsForGame } from "./dataManager/gamePriceMonitor";
+import { getUser } from "./dataManager/userManager";
 
 exports.handler = async (event: any, context: any, callback: any) => {
     try {
         let totalWishlistItems = await Collections.getAllGamesByCollectionType('Wishlist');
         for (let game of totalWishlistItems) {
-          let gamePriceMonitors = await getAllPriceMonitorsForGame(game.id);
+          let gamePriceMonitors = await getAllPriceMonitorsForGame(game);
+          let user = await getUser(game.userID);
           for (let gamePriceMonitor of gamePriceMonitors) {
             let gamePriceData = await Common.getLatestPriceData(gamePriceMonitor);
-            if (gamePriceData.desiredPriceExists)
-              await Common.sendRunningPriceNotification(game, gamePriceData);
+            if (gamePriceData.desiredPriceExists)              
+              await Common.sendRunningPriceNotification(game, gamePriceData, user);
           }
         };
         return httpResponse({statusCode: 200, body: JSON.stringify("Wishlist Notification Emails Sent Successfully!")});
