@@ -11,24 +11,35 @@ module.exports = {
         AttributeDefinitions: [
           {AttributeName: 'partitionKey', AttributeType: 'S'},
           {AttributeName: 'sortKey', AttributeType: 'S'},
-          {AttributeName: 'collectionID', AttributeType: 'S'},
+          {AttributeName: 'GS1', AttributeType: 'S'},
           {AttributeName: 'itemType', AttributeType: 'S'},                        
         ],
         GlobalSecondaryIndexes: [ 
             { 
-                IndexName: 'collectionIDIndex', 
+                IndexName: 'GSI-1', 
                 KeySchema: [
                     {
-                        AttributeName: 'collectionID',
+                        AttributeName: 'GS1',
                         KeyType: 'HASH',
-                    },
-                    {
-                      AttributeName: 'sortKey',
-                      KeyType: 'RANGE',
-                  }
+                    }
                 ],
                 ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
                 Projection: {ProjectionType: "ALL"}
+            },
+            { 
+              IndexName: 'GSI-2', 
+              KeySchema: [
+                  {
+                      AttributeName: 'partitionKey',
+                      KeyType: 'HASH',
+                  },
+                  {
+                    AttributeName: 'GS1',
+                    KeyType: 'RANGE',
+                  }
+              ],
+              ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
+              Projection: {ProjectionType: "ALL"}
             },
             { 
               IndexName: 'itemTypeIndex', 
@@ -40,7 +51,7 @@ module.exports = {
                   {
                     AttributeName: 'sortKey',
                     KeyType: 'RANGE',
-                }
+                  }
               ],
               ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
               Projection: {ProjectionType: "ALL"}

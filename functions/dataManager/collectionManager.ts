@@ -233,7 +233,7 @@ export async function modifyGameInCollection(game: Game) {
 
 export async function removeGameFromCollection(game: Game) {
   let partitionKey = game.userID;
-  let sortKey = `[CollectionItem]#[${game.collectionID}]#[GameItem]#[${game.gameID}]`;
+  let sortKey = `[Collection]#[${game.collectionID}]#[Game]#[${game.gameID}]`;
   let params = {
     TableName: Config.table,
     Key: {

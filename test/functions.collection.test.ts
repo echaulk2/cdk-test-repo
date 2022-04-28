@@ -21,13 +21,11 @@ test("Add Game to Wishlist", async () => {
     }
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '987654'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
-    let response = await collectionManager.addGameToCollection(testGame, testWishlist);
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    testGame.priceMonitorData = [];
+    let response = await collectionManager.addGameToCollection(testGame);
     expect(response).toEqual([testGame]);
 });
 
@@ -42,15 +40,13 @@ test("Add Game to Wishlist that already exists", async () => {
     }
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '987654'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
-    await expect(collectionManager.addGameToCollection(testGame, testWishlist))
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    testGame.priceMonitorData = [];
+    await expect(collectionManager.addGameToCollection(testGame))
     .rejects
-    .toThrow("Game error, datastore response: Unable to create game.  Conditional Check Failed.")
+    .toThrow("Game error, datastore response: Unable to create game.  Game already exists in collection.")
 });
 
 test("removeGameFromCollection", async () => {
@@ -72,16 +68,15 @@ test("removeGameFromCollection", async () => {
     }
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '987654';
     let secondGameID = '667788';
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let secondTestGame = new gameObject.Game(secondGameID, userData.userID, userData.email, inputDataForSecondGame.gameName, itemType, inputDataForSecondGame.collectionID, inputDataForSecondGame.yearReleased, inputDataForSecondGame.genre, inputDataForSecondGame.console, inputDataForSecondGame.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputDataForSecondGame.collectionID);
-    await collectionManager.addGameToCollection(secondTestGame, testWishlist);
-    let response = await collectionManager.removeGameFromCollection(secondTestGame, testWishlist);
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    let secondTestGame = new gameObject.Game(secondGameID, userData.userID, inputDataForSecondGame.gameName, inputDataForSecondGame.yearReleased, inputDataForSecondGame.genre, inputDataForSecondGame.console, inputDataForSecondGame.developer, inputDataForSecondGame.collectionID);
+    testGame.priceMonitorData = []
+    secondTestGame.priceMonitorData = [];
+    let addSecondGameToCollection = await collectionManager.addGameToCollection(secondTestGame);
+    let response = await collectionManager.removeGameFromCollection(secondTestGame);
     expect(response).toEqual([testGame]);
 });
 
@@ -96,15 +91,12 @@ test("Remove a game that does not exist in a collection (i.e. attempt to remove 
     }
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let secondGameID = '667788';
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let secondTestGame = new gameObject.Game(secondGameID, userData.userID, userData.email, inputDataForSecondGame.gameName, itemType, inputDataForSecondGame.collectionID, inputDataForSecondGame.yearReleased, inputDataForSecondGame.genre, inputDataForSecondGame.console, inputDataForSecondGame.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputDataForSecondGame.collectionID);
-    await expect(collectionManager.removeGameFromCollection(secondTestGame, testWishlist))
+    let secondTestGame = new gameObject.Game(secondGameID, userData.userID, inputDataForSecondGame.gameName, inputDataForSecondGame.yearReleased, inputDataForSecondGame.genre, inputDataForSecondGame.console, inputDataForSecondGame.developer, inputDataForSecondGame.collectionID);
+    await expect(collectionManager.removeGameFromCollection(secondTestGame))
     .rejects
-    .toThrow("Game error, datastore response: Unable to delete game.  Conditional Check Failed.")
+    .toThrow("Game error, datastore response: Unable to delete game.  Unable to find game in collection.")
 });
 
 test("modifyGameInCollection", async () => {
@@ -119,13 +111,11 @@ test("modifyGameInCollection", async () => {
     
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '987654'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
-    let response = await collectionManager.modifyGameInCollection(testGame, testWishlist);
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    testGame.priceMonitorData = [];
+    let response = await collectionManager.modifyGameInCollection(testGame);
     expect(response).toEqual([testGame]);
 });
 
@@ -141,15 +131,12 @@ test("Modify a game that does not exist in the collection.", async () => {
     
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '331122'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
-    await expect(collectionManager.modifyGameInCollection(testGame, testWishlist))
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    await expect(collectionManager.modifyGameInCollection(testGame))
     .rejects
-    .toThrow("Game error, datastore response: Unable to modify game.  Conditional Check Failed.")
+    .toThrow("Game error, datastore response: Unable to modify game.  Unable to find game in collection.")
 });
 
 test("getGameInCollection", async () => {
@@ -164,13 +151,10 @@ test("getGameInCollection", async () => {
     
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '987654'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
-    let response = await collectionManager.getGameInCollection(testGame, testWishlist);
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    let response = await collectionManager.getGameInCollection(testGame);
     expect(response).toEqual(testGame);
 });
 
@@ -186,16 +170,13 @@ test("Attempt to get a game that doesn't exist in the collection", async () => {
     
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     //The game ID is the only different attribute, which causes it to not be found and throw an error.
-    let gameID = '009988'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
-    let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
-    await expect(collectionManager.getGameInCollection(testGame, testWishlist))
+    let gameID = '009988';
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    await expect(collectionManager.getGameInCollection(testGame))
     .rejects
-    .toThrow("Game error, datastore response: Unable to get game. Game not found.")
+    .toThrow("Game error, datastore response: Unable to get game. Game not found.");
 });
 
 test("collectionError", async () => {
@@ -215,11 +196,10 @@ test("getAllGamesInCollection", async () => {
     
     let userData = {
         userID: 'erikchaulk',
-        email: 'erikchaulk@gmail.com'
     };
     let gameID = '987654'
-    let itemType = '[CollectionItem]#[Wishlist]#[GameItem]';
-    let testGame = new gameObject.Game(gameID, userData.userID, userData.email, inputData.gameName, itemType, inputData.collectionID, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer);
+    let testGame = new gameObject.Game(gameID, userData.userID, inputData.gameName, inputData.yearReleased, inputData.genre, inputData.console, inputData.developer, inputData.collectionID);
+    testGame.priceMonitorData = [];
     let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
     let response = await collectionManager.getAllGamesInCollection(testWishlist);
     expect(response).toEqual([testGame]);

@@ -7,29 +7,26 @@ const gamePriceMonitorError = require("../functions/error/gamePriceMonitorErrorH
 
 test("createGamePriceMonitor", async () => {
     let collectionItemData = {
-        id: "565656",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         gameName: 'God of War',
         yearReleased: 2017,
         genre: 'Action-Adventure',
         console: 'Playstation',
         developer: 'Santa Monica Studio',
-        itemType: '[CollectionItem]#[Wishlist]#[GameItem]#[testUser123]#[565656]'
     }
     let priceMonitorData = {
-        id: "565656",
+        id: "1234",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "new",
         desiredPrice: 50
     };
-    let testWishlist = new gamePriceMonitorWishlistTest.Wishlist(collectionItemData.userID, collectionItemData.collectionID);
-    let testGame = new gamePriceMonitorGameTest.Game(collectionItemData.id, collectionItemData.userID, collectionItemData.email, collectionItemData.gameName, collectionItemData.itemType, collectionItemData.collectionID, collectionItemData.yearReleased, collectionItemData.genre, collectionItemData.console, collectionItemData.developer);
-    let addGame = await gamePriceMonitorCollectionTest.addGameToCollection(testGame, testWishlist);
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.collectionID, priceMonitorData.userID, priceMonitorData.email, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let testGame = new gamePriceMonitorGameTest.Game(collectionItemData.gameID, collectionItemData.userID, collectionItemData.gameName, collectionItemData.yearReleased, collectionItemData.genre, collectionItemData.console, collectionItemData.developer, collectionItemData.collectionID);
+    await gamePriceMonitorCollectionTest.addGameToCollection(testGame);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, testGame.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
     let response = await gamePriceMonitorManagerTest.createGamePriceMonitor(priceMonitor);
     expect(response).toEqual(priceMonitor);
 });
@@ -37,26 +34,23 @@ test("createGamePriceMonitor", async () => {
 //Attempt to create a price monitor that already exists
 test("createGamePriceMonitor", async () => {
     let collectionItemData = {
-        id: "565656",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         gameName: 'God of War',
         yearReleased: 2017,
         genre: 'Action-Adventure',
         console: 'Playstation',
         developer: 'Santa Monica Studio',
-        itemType: '[CollectionItem]#[Wishlist]#[GameItem]#[testUser123]#[565656]'
     }
     let priceMonitorData = {
-        id: "565656",
+        id: "1234",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "new",
         desiredPrice: 50
     };
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.collectionID, priceMonitorData.userID, priceMonitorData.email, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, collectionItemData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
     await expect(gamePriceMonitorManagerTest.createGamePriceMonitor(priceMonitor))
     .rejects
     .toThrow("Game price monitor error: Unable to create Game Price Monitor.  Conditional Check Failed.")
@@ -64,70 +58,71 @@ test("createGamePriceMonitor", async () => {
 
 test("getGamePriceMonitor", async () => {
     let priceMonitorData = {
-        id: "565656",
+        id: "1234",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "new",
         desiredPrice: 50
     };
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.collectionID, priceMonitorData.userID, priceMonitorData.email, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, priceMonitorData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
     let response = await gamePriceMonitorManagerTest.getGamePriceMonitor(priceMonitor);
     expect(response).toEqual(priceMonitor);
 });
 
 test("getGamePriceMonitor", async () => {
     let unknownPriceMonitor = {
-        id: "565656",
+        id: "4321",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "loose",
         desiredPrice: 35
     };
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(unknownPriceMonitor.id, unknownPriceMonitor.collectionID, unknownPriceMonitor.userID, unknownPriceMonitor.email, unknownPriceMonitor.desiredCondition, unknownPriceMonitor.desiredPrice);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(unknownPriceMonitor.id, unknownPriceMonitor.userID, unknownPriceMonitor.collectionID, unknownPriceMonitor.gameID, unknownPriceMonitor.desiredCondition, unknownPriceMonitor.desiredPrice);
     await expect(gamePriceMonitorManagerTest.getGamePriceMonitor(priceMonitor))
     .rejects
     .toThrow("Game price monitor error: Unable to get game price monitor. Game price monitor not found.");
 });
 
-
 test("getAllPriceMonitorsForGame", async () => {
-    let id = "565656";
+    let gameID = "565656"
     let firstPriceMonitorData = {
-        id: "565656",
+        id: "1234",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "new",
         desiredPrice: 50
     };
     let secondPriceMonitorData = {
-        id: "565656",
+        id: "4321",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "loose",
         desiredPrice: 35
     };
-    let firstMonitor = new gamePriceMonitorTest.GamePriceMonitor(firstPriceMonitorData.id, firstPriceMonitorData.collectionID, firstPriceMonitorData.userID, firstPriceMonitorData.email, firstPriceMonitorData.desiredCondition, firstPriceMonitorData.desiredPrice);
-    let secondMonitor = new gamePriceMonitorTest.GamePriceMonitor(secondPriceMonitorData.id, secondPriceMonitorData.collectionID, secondPriceMonitorData.userID, secondPriceMonitorData.email, secondPriceMonitorData.desiredCondition, secondPriceMonitorData.desiredPrice);
-    let addSecondMonitor = await gamePriceMonitorManagerTest.createGamePriceMonitor(secondMonitor);
-    let priceMonitors = [secondMonitor, firstMonitor];
-    let response = await gamePriceMonitorManagerTest.getAllPriceMonitorsForGame(id);
+    let firstMonitor = new gamePriceMonitorTest.GamePriceMonitor(firstPriceMonitorData.id, firstPriceMonitorData.userID, firstPriceMonitorData.collectionID, firstPriceMonitorData.gameID, firstPriceMonitorData.desiredCondition, firstPriceMonitorData.desiredPrice);
+    let secondMonitor = new gamePriceMonitorTest.GamePriceMonitor(secondPriceMonitorData.id, secondPriceMonitorData.userID, secondPriceMonitorData.collectionID, secondPriceMonitorData.gameID, secondPriceMonitorData.desiredCondition, secondPriceMonitorData.desiredPrice);
+    let testGame = new gamePriceMonitorGameTest.Game(gameID, firstMonitor.userID);
+    testGame.collectionID = firstMonitor.collectionID;
+    await gamePriceMonitorManagerTest.createGamePriceMonitor(secondMonitor);
+    let priceMonitors = [firstMonitor, secondMonitor];
+    let response = await gamePriceMonitorManagerTest.getAllPriceMonitorsForGame(testGame);
     expect(response).toEqual(priceMonitors);
 });
 
 test("modifyGamePriceMonitor", async () => {
     let priceMonitorData = {
-        id: "565656",
+        id: "1234",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "new",
         desiredPrice: 55
     };
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.collectionID, priceMonitorData.userID, priceMonitorData.email, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, priceMonitorData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
     let response = await gamePriceMonitorManagerTest.modifyGamePriceMonitor(priceMonitor);
     expect(response).toEqual(priceMonitor);
 });
@@ -136,44 +131,44 @@ test("modifyGamePriceMonitor", async () => {
 test("modifyGamePriceMonitor", async () => {
     let priceMonitorData = {
         id: "abc123",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
         desiredCondition: "new",
         desiredPrice: 55
     };
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.collectionID, priceMonitorData.userID, priceMonitorData.email, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, priceMonitorData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
     await expect(gamePriceMonitorManagerTest.modifyGamePriceMonitor(priceMonitor))
     .rejects
     .toThrow("Game price monitor error: Unable to modify Game Price Monitor.  Conditional Check Failed.")
 });
 
 test("deleteGamePriceMonitor", async () => {
-    let secondPriceMonitorData = {
-        id: "565656",
+    let priceMonitorData = {
+        id: "1234",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
-        desiredCondition: "loose",
-        desiredPrice: 35
+        desiredCondition: "new",
+        desiredPrice: 55
     };
-    let secondMonitor = new gamePriceMonitorTest.GamePriceMonitor(secondPriceMonitorData.id, secondPriceMonitorData.collectionID, secondPriceMonitorData.userID, secondPriceMonitorData.email, secondPriceMonitorData.desiredCondition, secondPriceMonitorData.desiredPrice);
-    let response = await gamePriceMonitorManagerTest.deleteGamePriceMonitor(secondMonitor);
-    expect(response).toEqual(secondMonitor);    
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, priceMonitorData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let response = await gamePriceMonitorManagerTest.deleteGamePriceMonitor(priceMonitor);
+    expect(response).toEqual(priceMonitor);    
 });
 
 //Delete a price monitor that doesn't exist (i.e. trying to delete a game that was already deleted)
 test("deleteGamePriceMonitor", async () => {
-    let secondPriceMonitorData = {
-        id: "565656",
+    let priceMonitorData = {
+        id: "1234",
+        gameID: "565656",
         collectionID: "1",
         userID: "testUser123",
-        email: "testUser123@gmail.com",
-        desiredCondition: "loose",
-        desiredPrice: 35
+        desiredCondition: "new",
+        desiredPrice: 55
     };
-    let secondMonitor = new gamePriceMonitorTest.GamePriceMonitor(secondPriceMonitorData.id, secondPriceMonitorData.collectionID, secondPriceMonitorData.userID, secondPriceMonitorData.email, secondPriceMonitorData.desiredCondition, secondPriceMonitorData.desiredPrice);
-    await expect(gamePriceMonitorManagerTest.deleteGamePriceMonitor(secondMonitor))
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, priceMonitorData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    await expect(gamePriceMonitorManagerTest.deleteGamePriceMonitor(priceMonitor))
     .rejects
     .toThrow("Game price monitor error: Unable to delete game price monitor.  Conditional Check Failed.")
 });
