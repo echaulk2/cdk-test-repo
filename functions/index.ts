@@ -1,92 +1,79 @@
-const AWS = require('aws-sdk');
-import { Game } from "./game"
-import { getGame, listGames, IHttpResponse, IJSONPayload, deleteGame, modifyGame } from "./gameManager";
+import * as Interfaces from "./shared/interfaces/interfaces"
+import * as Common from "./shared/common/game";
+import * as CommonPriceMonitor from "./shared/common/gamePriceMonitor";
+import * as CommonUser from "./shared/common/user";
+import * as CommonCollection from "./shared/common/collection";
+import * as HttpResponse from "./shared/common/httpResponse";
+import { Wishlist } from "./models/wishlist";
 
 exports.handler = async (event: any, context: any, callback: any) => {
-  const userID = event.requestContext.authorizer.claims['cognito:username'];
+  let userData: Interfaces.IUserData = {
+    userID: `U-${event.requestContext.authorizer.claims['cognito:username']}`,
+    email: event.requestContext.authorizer.claims['email']
+  };
+
   switch (event.path) {
+    case ("/createUser"):
+      let createUserData = CommonUser.serializeNewUserData(userData);
+      callback(null, await HttpResponse.createUserHttpResponse(createUserData));
+      break;
     case ("/getGame"):
-      let gameName = { gameName: event.queryStringParameters["gameName"] };
-      let getGameData = deserializeGameData(userID, gameName)
-      callback(null, await getGameHttpResponse(getGameData));
+      let payload: Interfaces.IPayloadData = { 
+        gameID: event?.queryStringParameters["gameID"]
+      };
+      let getGameData = Common.serializeExistingGameData(userData, payload)
+      callback(null, await HttpResponse.getGameHttpResponse(getGameData));
       break;
     case("/listGames"):
-      let listGameData = userID;
-      callback(null, await listGamesHttpResponse(listGameData));
+      let listGameData = userData;
+      callback(null, await HttpResponse.listGamesHttpResponse(listGameData));
       break;
     case("/createGame"):
-      let createGameData = deserializeGameData(userID, JSON.parse(event.body));
-      callback(null, await createGameHttpResponse(createGameData));
+      let createGameData = Common.serializeNewGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.createGameHttpResponse(createGameData));
       break;
     case("/modifyGame"):
-      let modifyGameData = deserializeGameData(userID, JSON.parse(event.body));
-      callback(null, await modifyGameHttpResponse(modifyGameData));
+      let modifyGameData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.modifyGameHttpResponse(modifyGameData));
       break;
     case ("/deleteGame"):
-      let deleteGameData = deserializeGameData(userID, JSON.parse(event.body));
-      callback(null, await deleteGameHttpResponse(deleteGameData));
+      let deleteGameData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.deleteGameHttpResponse(deleteGameData));
       break;
+    case ("/collection/wishlist/"):
+      let wishlistID = event?.queryStringParameters["collectionID"]
+      let wishlist = new Wishlist(userData.userID, wishlistID);
+      callback(null, await HttpResponse.getWishlistHttpResponse(wishlist));
+      break;
+    case ("/collection/wishlist/createWishlist"):
+      let createWishlistData = CommonCollection.serializeNewWishlist(userData);
+      callback(null, await HttpResponse.createWishlistHttpResponse(createWishlistData));      
+    case ("/collection/wishlist/addGame"):
+      let addGameData = Common.serializeNewGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.addGameToWishlistHttpResponse(addGameData));
+      break;
+    case ("/collection/wishlist/modifyGame"):
+      let modifyWishlistData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.modifyGameInWishlistHttpResponse(modifyWishlistData));
+      break;
+    case ("/collection/wishlist/removeGame"):
+      let removeGameData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.removeGameFromWishlistHttpResponse(removeGameData));
+      break;
+    case ("/collection/wishlist/addPriceMonitor"):
+      let addPriceMonitor = CommonPriceMonitor.serializeNewGamePriceMonitorData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.addPriceMonitorToWishlistHttpResponse(addPriceMonitor));
+      break;
+    case ("/collection/wishlist/modifyPriceMonitor"):
+      let modifyPriceMonitor = CommonPriceMonitor.serializeExistingGamePriceMonitorData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.modifyPriceMonitorWishlistHttpResponse(modifyPriceMonitor));
+      break;      
+    case ("/collection/wishlist/deletePriceMonitor"):
+      let deletePriceMonitor = CommonPriceMonitor.serializeExistingGamePriceMonitorData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.deletePriceMonitorWishlistHttpResponse(deletePriceMonitor));
+      break;        
     default:
-      callback(null, httpResponse({statusCode: 400, body: JSON.stringify("Invalid operation.")}));
+      callback(null, HttpResponse.httpResponse({statusCode: 400, body: JSON.stringify("Invalid operation.")}));
       break;
     }
 }  
-
-export async function getGameHttpResponse(game: Game) {
-  try {
-    let response = await getGame(game);
-    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
-  } catch (err: any) {
-    return httpResponse({statusCode: err.statusCode, body: err.message});
-  }
-}
-
-export async function listGamesHttpResponse(userID: string) {
-  try {
-    let response = await listGames(userID);
-    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
-  } catch (err: any) {
-    return httpResponse({statusCode: err.statusCode, body: err.message});
-  }
-}
-
-export async function createGameHttpResponse(game: Game) {
-  try {
-    let response = await game.createGame();
-    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
-  } catch (err: any) {
-    return httpResponse({statusCode: err.statusCode, body: err.message});
-  }
-}
-
-export async function modifyGameHttpResponse(game: Game) {
-  try {
-    let response = await modifyGame(game);
-    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
-  } catch (err: any) {
-    return httpResponse({statusCode: err.statusCode, body: err.message});
-  }
-}
-
-export async function deleteGameHttpResponse(game: Game) {
-  try {
-    let response = await deleteGame(game);
-    return httpResponse({statusCode: 200, body: JSON.stringify(response)});
-  } catch (err: any) {
-    return httpResponse({statusCode: err.statusCode, body: err.message});
-  }
-}
-
-export function httpResponse(data: IHttpResponse) : {} {
-  return {
-    statusCode: data.statusCode,
-    body: data.body,
-    headers: {
-      'Access-Control-Allow-Origin': '*'
-    }
-  }
-}
-
-export function deserializeGameData(userID: string, data: IJSONPayload) {
-  return new Game(userID, data.gameName, data.yearReleased, data.genre, data.console, data.developer);
-}

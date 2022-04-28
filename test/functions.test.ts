@@ -1,104 +1,118 @@
-const game = require("../functions/game");
-const gameManager = require("../functions/gameManager");
-const index = require("../functions/index");
-const error = require("../functions/gameErrorHandler")
+const game = require("../functions/models/game");
+const gameManager = require("../functions/dataManager/gameManager");
+const httpResponse = require("../functions/shared/common/httpResponse");
+const error = require("../functions/error/gameErrorHandler")
+const common = require("../functions/shared/common/game");
 
 test("CreateGame", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let response = await testGame.createGame();
-    expect(response).toEqual(testGame);
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testCreateGame = new game.Game(gameID, userID, 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.createGame(testCreateGame);
+    expect(response).toEqual(testCreateGame);
 });
 
 test("GetGame", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let response = await gameManager.getGame(testGame);
-    expect(response).toEqual(testGame);
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGetGame = new game.Game(gameID, userID, 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.getGame(testGetGame);
+    expect(response).toEqual(testGetGame);
 });
 
 test("ModifyGame", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await gameManager.modifyGame(testGame);
-    expect(response).toEqual(testGame);
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testModifyGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.modifyGame(testModifyGame);
+    expect(response).toEqual(testModifyGame);
 });
 
 test("DeleteGame", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await gameManager.deleteGame(testGame);
-    expect(response).toEqual(testGame);
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testDeleteGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await gameManager.deleteGame(testDeleteGame);
+    expect(response).toEqual(testDeleteGame);
 });
 
-test("serializeDynamoResponse", async () => {
-    let dynamoResponse = {
-        'userID':'erikchaulk',
+test("serializeExistingGameData", async () => {
+    let data = {
+        'gameID':'123456',
         'gameName':'League of Legends',
         'yearReleased':2010,
         'genre':'Moba',
         'console':'PC',
         'developer':'Riot Games'
+    } 
+    let userData = {
+        userID: 'erikchaulk',
     }
-    let response = gameManager.serializeDynamoResponse(dynamoResponse);
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    expect(response).toEqual(testGame);
+    let response = common.serializeExistingGameData(userData, data);
+    let testDynamoResponse = new game.Game(data.gameID, userData.userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    expect(response).toEqual(testDynamoResponse);
 });
 
 test("gameErrorHandler", async () => {
-    let testError = new error.GameError('Game not found', 404);
+    let testError = new error.GameError('Game not found');
     expect(testError.message).toEqual("Game error, datastore response: Game not found");
-    expect(testError.statusCode).toEqual(404);    
 });
 
 test("createGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await index.createGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await httpResponse.createGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 //Game already created
 test("createGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await index.createGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: The conditional request failed"}));
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await httpResponse.createGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 400, body: "Game Error"}));
 });
 
 test("getGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let response = await index.getGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
-});
-
-test("listGamesHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
-    let secondTestGame = new game.Game('erikchaulk', 'Magic: The Gathering', 2019, 'Trading Card Game', 'PC', 'Wizards of the Coast');
-    let gameArray = [];
-    gameArray.push(testGame, secondTestGame);
-    let userID = 'erikchaulk'
-    await secondTestGame.createGame();
-    let response = await index.listGamesHttpResponse(userID);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(gameArray)}));
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let response = await httpResponse.getGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 test("modifyGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let response = await index.modifyGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
+    let response = await httpResponse.modifyGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 //Modify a game that doesn't exist
 test("modifyGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
-    let response = await index.modifyGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to modify game."}));
+    let gameID = '234567';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
+    let response = await httpResponse.modifyGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 400, body: "Game Error"}));
 });
 
 test("deleteGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
-    let response = await index.deleteGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
+    let response = await httpResponse.deleteGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
 
 //Delete a game that doesn't exist
 test("deleteGameHttpResponse", async () => {
-    let testGame = new game.Game('erikchaulk', 'The Witness', 2016, 'Strategy', 'PC', 'Valve');
-    let response = await index.deleteGameHttpResponse(testGame);
-    expect(response).toEqual(index.httpResponse({statusCode: 400, body: "Game error, datastore response: Unable to delete game."}));
+    let gameID = '123456';
+    let userID = 'erikchaulk';
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
+    let response = await httpResponse.deleteGameHttpResponse(testGame);
+    expect(response).toEqual(httpResponse.httpResponse({statusCode: 400, body: "Game Error"}));
 });
