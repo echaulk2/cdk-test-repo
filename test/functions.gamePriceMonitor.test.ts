@@ -26,7 +26,7 @@ test("createGamePriceMonitor", async () => {
     };
     let testGame = new gamePriceMonitorGameTest.Game(collectionItemData.gameID, collectionItemData.userID, collectionItemData.gameName, collectionItemData.yearReleased, collectionItemData.genre, collectionItemData.console, collectionItemData.developer, collectionItemData.collectionID);
     await gamePriceMonitorCollectionTest.addGameToCollection(testGame);
-    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, testGame.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
+    let priceMonitor = new gamePriceMonitorTest.GamePriceMonitor(priceMonitorData.id, priceMonitorData.userID, priceMonitorData.collectionID, priceMonitorData.gameID, priceMonitorData.desiredCondition, priceMonitorData.desiredPrice);
     let response = await gamePriceMonitorManagerTest.createGamePriceMonitor(priceMonitor);
     expect(response).toEqual(priceMonitor);
 });
