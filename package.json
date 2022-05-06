@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "jest --transformIgnorePatterns \"node_modules/(?!cdk-project)/\" --env=jsdom",
     "cdk": "cdk"
   },
   "devDependencies": {
