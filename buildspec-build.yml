@@ -6,6 +6,12 @@ phases:
       - n 14.18.0
       - npm install -g aws-cdk 
       - npm install jest
+      - npm install --save-dev babel-jest @babel/core @babel/preset-env
+      - npm install --save-dev @babel/preset-typescript
+      - npm install --save-dev ts-jest
+      - npm install --save-dev @types/jest
+      - npm install axios --save
+      - npm install cheerio
   build:
     commands:
       - npm test
