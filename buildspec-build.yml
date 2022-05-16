@@ -5,6 +5,7 @@ phases:
     commands:
       - n 14.18.0
       - npm install -g aws-cdk 
+      - npm install jest
   build:
     commands:
       - npm test
