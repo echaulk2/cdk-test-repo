@@ -31,7 +31,7 @@ test("createGamePriceMonitor", async () => {
     expect(response).toEqual(priceMonitor);
 });
 
-//Attempt to create a price monitor that already exists
+//Attempt to create a price monitor that already exists...
 test("createGamePriceMonitor", async () => {
     let collectionItemData = {
         gameID: "565656",
