@@ -4,8 +4,6 @@ phases:
   install:
     commands:
       - n 14.18.0
-      - npm -v
-      - node -v
       - npm install -g aws-cdk 
   build:
     commands:
