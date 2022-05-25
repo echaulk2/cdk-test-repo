@@ -9,8 +9,8 @@ export const config = {
   ...(isTest && {
     endpoint: 'localhost:8000',
     sslEnabled: false,
-    region: 'local-env',
-  }),
+    region: 'local-env'
+  })
 };
 
 export const docClient = new AWS.DynamoDB.DocumentClient(config);
