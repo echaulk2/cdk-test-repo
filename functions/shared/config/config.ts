@@ -7,9 +7,9 @@ export const isTest = process.env.JEST_WORKER_ID;
 export const config = {
   convertEmptyValues: true,
   ...(isTest && {
-    endpoint: 'localhost:8000',
+    endpoint: process.env.MOCK_DYNAMODB_ENDPOINT,
     sslEnabled: false,
-    region: 'local-env',
+    region: "local",
   }),
 };
 

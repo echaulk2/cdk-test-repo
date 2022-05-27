@@ -1,9 +1,10 @@
-process.env['DYNAMO_DB_TEST_TABLE'] = 'dynamoDB-test-table';
+//process.env['DYNAMO_DB_TEST_TABLE'] = 'dynamoDB-test-table';
+process.env['MOCK_DYNAMODB_ENDPOINT'] = 'dynamoDB-test-table';
 process.env['PRICE_DATA_TEST_URL'] = './test/test.html';
 module.exports = {
     tables: [
       {
-        TableName: process.env.DYNAMO_DB_TEST_TABLE,
+        TableName: process.env.MOCK_DYNAMODB_ENDPOINT,
         KeySchema: [
           {AttributeName: 'partitionKey', KeyType: 'HASH'},
           {AttributeName: 'sortKey', KeyType: 'RANGE'},
@@ -61,4 +62,5 @@ module.exports = {
         ProvisionedThroughput: {ReadCapacityUnits: 1, WriteCapacityUnits: 1},
       }
     ],
+    basePort: 8001,
   };
