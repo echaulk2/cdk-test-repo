@@ -11,7 +11,6 @@ exports.handler = async (event: any, context: any, callback: any) => {
     userID: `U-${event.requestContext.authorizer.claims['cognito:username']}`,
     email: event.requestContext.authorizer.claims['email']
   };
-
   switch (event.path) {
     case ("/createUser"):
       let createUserData = CommonUser.serializeNewUserData(userData);

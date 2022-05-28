@@ -3,8 +3,8 @@ version: 0.2
 phases:
   install:
     commands:
-      - n 14.18.0
-      - npm install -g aws-cdk 
+      - npm install
+      - npm install aws-cdk 
       - npm install jest
   build:
     commands:
