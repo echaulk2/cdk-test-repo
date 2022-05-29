@@ -7,7 +7,7 @@ phases:
   build:
     commands:
       - npm test
-      - node_modeules/cdk/bin/cdk cdk synth > template.yml
+      - node_modules/cdk/bin/cdk cdk synth > template.yml
 artifacts:
   files:
     - 'functions/*.ts'
