@@ -7,7 +7,7 @@ import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 import * as events from '@aws-cdk/aws-events';
 import * as targets from '@aws-cdk/aws-events-targets';
 import * as ssm from '@aws-cdk/aws-ssm';
-import iam = require("../node_modules/@aws-cdk/aws-cloudwatch/node_modules/@aws-cdk/aws-iam"); //There's some bug with importing the iam module... see https://github.com/aws/aws-cdk/issues/8410
+import iam = require("@aws-cdk/aws-iam");
 
 export class CdkProjectStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {

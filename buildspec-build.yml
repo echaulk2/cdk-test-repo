@@ -3,11 +3,11 @@ version: 0.2
 phases:
   install:
     commands:
-      - npm install
+      - npm install 
   build:
     commands:
       - npm test
-      - node_modules/cdk/bin/cdk cdk synth > template.yml
+      - cd node_modules/cdk/bin/ cdk synth > template.yml
 artifacts:
   files:
     - 'functions/*.ts'
