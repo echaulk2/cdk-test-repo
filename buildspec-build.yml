@@ -4,12 +4,10 @@ phases:
   install:
     commands:
       - npm install
-      - npm install aws-cdk 
-      - npm install jest
   build:
     commands:
       - npm test
-      - cdk synth > template.yml
+      - node_modeules/cdk/bin/cdk cdk synth > template.yml
 artifacts:
   files:
     - 'functions/*.ts'
