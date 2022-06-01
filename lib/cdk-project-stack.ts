@@ -1,16 +1,18 @@
-import * as cdk from '@aws-cdk/core';
-import * as apigateway from '@aws-cdk/aws-apigateway';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
-import * as cognito from '@aws-cdk/aws-cognito';
-import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
-import * as events from '@aws-cdk/aws-events';
-import * as targets from '@aws-cdk/aws-events-targets';
-import * as ssm from '@aws-cdk/aws-ssm';
-import iam = require("@aws-cdk/aws-iam");
+import * as cdk from 'aws-cdk-lib/';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambdaNodeJS from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as path from 'path';
 
 export class CdkProjectStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     //DynamoDB Table Definition
@@ -56,8 +58,8 @@ export class CdkProjectStack extends cdk.Stack {
     }).stringValue;
 
         //Lambda Function
-    const lambdaFunction = new lambda.Function(this, 'aws-cdk-gameAPI-function', {
-      code: lambda.Code.fromAsset("functions"),
+    const lambdaFunction = new lambdaNodeJS.NodejsFunction(this, 'aws-cdk-gameAPI-function', {
+      entry: path.join(__dirname, `/../functions/index.ts`),
       handler: 'index.handler',
       runtime: lambda.Runtime.NODEJS_14_X,
       environment: {
@@ -68,8 +70,8 @@ export class CdkProjectStack extends cdk.Stack {
       description: 'Lambda responsible for handling the Game API public endpoints'
     });
 
-    const notificationsLambda = new lambda.Function(this, 'aws-cdk-notifications-function', {
-      code: lambda.Code.fromAsset("functions"),
+    const notificationsLambda = new lambdaNodeJS.NodejsFunction(this, 'aws-cdk-notifications-function', {
+      entry: path.join(__dirname, `/../functions/notifications.ts`),
       handler: 'notifications.handler',
       runtime: lambda.Runtime.NODEJS_14_X,
       environment: {
