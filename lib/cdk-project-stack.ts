@@ -67,7 +67,7 @@ export class CdkProjectStack extends cdk.Stack {
         PRICE_DATA_URL: priceDataURL
       },
       timeout: cdk.Duration.seconds(30),
-      description: 'Lambda responsible for handling the Game API public endpoints',
+      description: 'Game API public endpoints',
     });
 
     const notificationsLambda = new lambdaNodeJS.NodejsFunction(this, 'aws-cdk-notifications-function', {
@@ -80,7 +80,7 @@ export class CdkProjectStack extends cdk.Stack {
         SES_SOURCE_EMAIL_ADDRESS: sesSourceEmailAddress
       },
       timeout: cdk.Duration.seconds(30),
-      description: 'Lambda responsible for sending Collection notifications',
+      description: 'Collection notifications',
     });
 
     const sesLambdaPolicy = new iam.PolicyStatement({
