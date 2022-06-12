@@ -6,4 +6,5 @@ phases:
       - npm install
   build:
     commands:
+      - cd node_modules/cdk/bin/ cdk synth
       - cd node_modules/cdk/bin/ cdk deploy --require-approval never
