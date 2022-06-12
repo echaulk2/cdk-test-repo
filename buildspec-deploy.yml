@@ -7,4 +7,4 @@ phases:
       - npm install -g aws-cdk
   build:
     commands:
-      - node_modules/cdk/bin/cdk deploy --require-approval never
+      - cdk deploy --require-approval never
