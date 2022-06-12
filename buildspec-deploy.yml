@@ -6,4 +6,4 @@ phases:
       - npm install
   build:
     commands:
-      - node_modules/cdk/bin/cdk deploy --require-approval never
+      - node_modules/cdk/bin/ cdk deploy --require-approval never
