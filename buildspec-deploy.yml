@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
-      - npm install -g
+      - npm install
   build:
     commands:
       - node_modules/cdk/bin/cdk deploy --require-approval never
