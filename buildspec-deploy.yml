@@ -4,6 +4,8 @@ phases:
   install:
     commands:
       - npm install
+      - npm run build
+      - npm --prefix ./functions install ./functions
   build:
     commands:
       - node_modules/cdk/bin/cdk deploy --require-approval never
