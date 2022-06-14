@@ -57,30 +57,29 @@ export class CdkProjectStack extends cdk.Stack {
       parameterName: 'cdk-project-sesSourceEmailAddress'
     }).stringValue;
 
-        //Lambda Function
-    const lambdaFunction = new lambdaNodeJS.NodejsFunction(this, 'aws-cdk-gameAPI-function', {
-      entry: path.join(__dirname, `/../functions/index.ts`),
-      handler: 'index.handler',
+    const lambdaFunction = new lambda.Function(this, 'aws-cdk-gameAPI-function', {
       runtime: lambda.Runtime.NODEJS_14_X,
-      environment: {
-        DYNAMO_DB_GAME_TABLE: gameTable.tableName,
-        PRICE_DATA_URL: priceDataURL
-      },
       timeout: cdk.Duration.seconds(30),
-      description: 'Game API public endpoints',
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '/../functions/')),
+      description: 'GameAPI public endpoints',
+      environment: {
+         DYNAMO_DB_GAME_TABLE: gameTable.tableName,
+         PRICE_DATA_URL: priceDataURL
+      }
     });
 
-    const notificationsLambda = new lambdaNodeJS.NodejsFunction(this, 'aws-cdk-notifications-function', {
-      entry: path.join(__dirname, `/../functions/notifications.ts`),
-      handler: 'notifications.handler',
+    const notificationsLambda = new lambda.Function(this, 'aws-cdk-notifications-function', {
       runtime: lambda.Runtime.NODEJS_14_X,
+      timeout: cdk.Duration.seconds(30),
+      handler: 'notifications.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '/../functions/')),
+      description: 'Collections notifications',
       environment: {
         DYNAMO_DB_GAME_TABLE: gameTable.tableName,
         PRICE_DATA_URL: priceDataURL,
         SES_SOURCE_EMAIL_ADDRESS: sesSourceEmailAddress
-      },
-      timeout: cdk.Duration.seconds(30),
-      description: 'Collection notifications',
+      }
     });
 
     const sesLambdaPolicy = new iam.PolicyStatement({
