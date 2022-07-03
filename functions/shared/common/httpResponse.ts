@@ -1,7 +1,7 @@
 import { Game } from "../../models/game"
 import { getGame, listGames, deleteGame, modifyGame, createGame } from "../../dataManager/gameManager";
 import { Wishlist } from "../../models/wishlist"; 
-import { createCollection, getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection } from "../../dataManager/collectionManager";
+import { createCollection, getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection, listCollections } from "../../dataManager/collectionManager";
 import * as Interfaces from "../interfaces/interfaces";
 import { GameError } from "../../error/gameErrorHandler";
 import { GamePriceError } from "../../error/gamePriceErrorHandler"
@@ -96,6 +96,23 @@ export async function getGameHttpResponse(game: Game) {
   export async function getWishlistHttpResponse(wishlist: Wishlist) {
     try {
       let response = await getAllGamesInCollection(wishlist);
+      return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+    } catch (err: any) {
+      if (err instanceof GamePriceError) {
+        return httpResponse({statusCode: 400, body: 'Game Price Error'});
+      } else if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else if (err instanceof GamePriceMonitor) {
+        return httpResponse({statusCode: 400, body: 'Game Price Monitor Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving wishlist.'})
+      }
+    }
+  }
+
+  export async function getWishlistsHttpResponse(userID: string) {
+    try {
+      let response = await listCollections(userID);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GamePriceError) {

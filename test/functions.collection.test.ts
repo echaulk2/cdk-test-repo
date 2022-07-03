@@ -1,3 +1,5 @@
+import { Wishlist } from "../functions/models/wishlist";
+
 const collection = require("../functions/models/collection");
 const wishlist = require("../functions/models/wishlist");
 const collectionManager = require("../functions/dataManager/collectionManager");
@@ -10,9 +12,16 @@ const Interfaces = require("../functions/shared/interfaces/interfaces");
 const gamePriceDAO = require("../functions/dataManager/gamePriceDataManager");
 const gameCommon = require("../functions/shared/common/game");
 
+
+test("createCollection", async () => {    
+    let wishlist = new collection.Collection("erikchaulk", "Col-2");
+    let response = await collectionManager.createCollection(wishlist);
+    expect(response).toEqual(wishlist);
+});
+
 test("Add Game to Wishlist", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Mario',
         yearReleased: 1992,
         genre: 'Action-Adventure',
@@ -31,7 +40,7 @@ test("Add Game to Wishlist", async () => {
 
 test("Add Game to Wishlist that already exists", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Mario',
         yearReleased: 1992,
         genre: 'Action-Adventure',
@@ -51,7 +60,7 @@ test("Add Game to Wishlist that already exists", async () => {
 
 test("removeGameFromCollection", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Mario',
         yearReleased: 1992,
         genre: 'Action-Adventure',
@@ -59,7 +68,7 @@ test("removeGameFromCollection", async () => {
         developer: 'Nintendo'
     }
     let inputDataForSecondGame = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Overwatch',
         yearReleased: 2016,
         genre: 'First-Person Shooter',
@@ -82,7 +91,7 @@ test("removeGameFromCollection", async () => {
 
 test("Remove a game that does not exist in a collection (i.e. attempt to remove a game that was already removed)", async () => {
     let inputDataForSecondGame = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Overwatch',
         yearReleased: 2016,
         genre: 'First-Person Shooter',
@@ -101,7 +110,7 @@ test("Remove a game that does not exist in a collection (i.e. attempt to remove 
 
 test("modifyGameInCollection", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Mario',
         yearReleased: 1993,
         genre: 'Action-Adventure',
@@ -121,7 +130,7 @@ test("modifyGameInCollection", async () => {
 
 test("Modify a game that does not exist in the collection.", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Smash Brothers',
         yearReleased: 1993,
         genre: 'Fighting',
@@ -141,7 +150,7 @@ test("Modify a game that does not exist in the collection.", async () => {
 
 test("getGameInCollection", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Mario',
         yearReleased: 1993,
         genre: 'Action-Adventure',
@@ -186,7 +195,7 @@ test("collectionError", async () => {
 
 test("getAllGamesInCollection", async () => {
     let inputData = {
-        collectionID: '2',
+        collectionID: 'Col-2',
         gameName: 'Super Mario',
         yearReleased: 1993,
         genre: 'Action-Adventure',
@@ -203,4 +212,16 @@ test("getAllGamesInCollection", async () => {
     let testWishlist = new wishlist.Wishlist(userData.userID, inputData.collectionID);
     let response = await collectionManager.getAllGamesInCollection(testWishlist);
     expect(response).toEqual([testGame]);
+});
+
+test("listCollections", async () => {    
+    let collectionData = [
+        {
+            userID: "erikchaulk",
+            collectionID: 'Col-2'
+        }
+    ]
+    let userID = "erikchaulk"
+    let response = await collectionManager.listCollections("erikchaulk");
+    expect(response).toEqual(collectionData);
 });

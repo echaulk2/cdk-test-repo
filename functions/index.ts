@@ -44,6 +44,9 @@ exports.handler = async (event: any, context: any, callback: any) => {
       let wishlist = new Wishlist(userData.userID, wishlistID);
       callback(null, await HttpResponse.getWishlistHttpResponse(wishlist));
       break;
+    case ("/collection/wishlist/getWishlists"):
+        callback(null, await HttpResponse.getWishlistsHttpResponse(userData.userID));
+        break;  
     case ("/collection/wishlist/createWishlist"):
       let createWishlistData = CommonCollection.serializeNewWishlist(userData);
       callback(null, await HttpResponse.createWishlistHttpResponse(createWishlistData));      

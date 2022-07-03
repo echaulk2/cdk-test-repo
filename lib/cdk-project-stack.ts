@@ -407,6 +407,21 @@ export class CdkProjectStack extends cdk.Stack {
       })
     });
     
+    wishlistAPI.addResource("getWishlists").addMethod("GET", apiIntegration, {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: authorizer.ref
+      },
+      requestParameters: {
+        "method.request.querystring.userID": true,        
+      },
+      requestValidator: new apigateway.RequestValidator(restAPI, 'get-all-user-wishlists-request-validator', {
+        restApi: restAPI,
+        validateRequestBody: false,
+        validateRequestParameters: true,
+      })
+    });
+    
     wishlistAPI.addResource("addGame").addMethod("POST", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {

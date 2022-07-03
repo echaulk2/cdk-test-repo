@@ -63,7 +63,7 @@ export async function getCollection(collection: Collection) {
 export async function listCollections(userID: string) : Promise<[Game]> {
   let params = {
     TableName: Config.table,
-    IndexName: "GS1-2",
+    IndexName: "GSI-2",
     KeyConditionExpression: "#partitionKey = :partitionKey AND begins_with(#GS1, :GS1)",
     ExpressionAttributeNames: {
         "#partitionKey": "partitionKey",
@@ -78,9 +78,9 @@ export async function listCollections(userID: string) : Promise<[Game]> {
   let paginatedData = await CommonGame.getPaginatedData(params);
   let collectionList = [] as any;
   if (paginatedData.length > 0) {
-    for (let game of paginatedData) {
-      let returnedGame = Common.deserializeCollection(game);
-      collectionList.push(returnedGame);
+    for (let collection of paginatedData) {
+      let returnedCollection = Common.deserializeCollection(collection);
+      collectionList.push(returnedCollection);
     }
   }
   return collectionList;
