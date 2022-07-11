@@ -152,7 +152,7 @@ import * as CommonCollection from "../shared/common/collection";
     }
   }
 
-  export async function getGameAndPriceMonitorsByID(game: Game) : Promise<Game | undefined> {
+  export async function getGameDetails(game: Game) : Promise<Game | undefined> {
     let params = {
       TableName: Config.table,
       IndexName: "GSI-1",

@@ -3,7 +3,7 @@ import * as Interfaces from "../interfaces/interfaces";
 import * as Config from "../config/config";
 
 export function deserializeGamePriceMonitorData(data: Interfaces.IDynamoGamePriceMonitor) : GamePriceMonitor {
-    return new GamePriceMonitor(data.priceMonitorID, data.userID, data.collectionID, data.gameID, data.desiredCondition, data.desiredPrice);
+    return new GamePriceMonitor(data.priceMonitorID, data.userID, data?.collectionID, data.gameID, data.desiredCondition, data.desiredPrice);
 }
 
 export function serializeNewGamePriceMonitorData(userData: Interfaces.IUserData, data: Interfaces.IJSONGamePriceMonitor) : GamePriceMonitor {

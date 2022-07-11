@@ -378,7 +378,7 @@ export class CdkProjectStack extends cdk.Stack {
       })
     });
     
-    restAPI.root.addResource("getGameAndPriceMonitors").addMethod("GET", apiIntegration, {
+    restAPI.root.addResource("getGameDetails").addMethod("GET", apiIntegration, {
       authorizationType: apigateway.AuthorizationType.COGNITO,
       authorizer: {
         authorizerId: authorizer.ref
@@ -386,7 +386,7 @@ export class CdkProjectStack extends cdk.Stack {
       requestParameters: {
         "method.request.querystring.gameID": true,        
       },
-      requestValidator: new apigateway.RequestValidator(restAPI, 'get-game-and-monitors-request-validator', {
+      requestValidator: new apigateway.RequestValidator(restAPI, 'get-game-details-request-validator', {
         restApi: restAPI,
         validateRequestBody: false,
         validateRequestParameters: true,

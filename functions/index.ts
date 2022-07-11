@@ -39,9 +39,9 @@ exports.handler = async (event: any, context: any, callback: any) => {
       let deleteGameData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
       callback(null, await HttpResponse.deleteGameHttpResponse(deleteGameData));
       break;
-    case ("/getGameAndPriceMonitors"):
-      let getGameAndPriceMonitorsData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
-      callback(null, await HttpResponse.getGameAndPriceMonitorsHttpResponse(getGameAndPriceMonitorsData));
+    case ("/getGameDetails"):
+      let getGameDetailsData = Common.serializeExistingGameData(userData, JSON.parse(event.body));
+      callback(null, await HttpResponse.getGameDetailsHttpResponse(getGameDetailsData));
       break;
     case ("/collection/wishlist/"):
       let wishlistID = event?.queryStringParameters["collectionID"]

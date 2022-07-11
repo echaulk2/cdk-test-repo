@@ -13,7 +13,7 @@ let AWS = require("aws-sdk");
 let ses = new AWS.SES({ region: "us-east-1" });
 
 export async function deserializeDynamoCollection(data: Interfaces.IDynamoGameItem) : Promise<Game> {
-    let game = new Game(data.gameID, data.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data.collectionID);
+    let game = new Game(data.gameID, data.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.collectionID);
     let gamePriceMonitors = await getAllPriceMonitorsForGame(game);
     let priceMonitorsWithLatestData = [] as any;
     if (gamePriceMonitors.length > 0) {

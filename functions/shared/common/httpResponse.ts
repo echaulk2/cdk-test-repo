@@ -1,5 +1,5 @@
 import { Game } from "../../models/game"
-import { getGame, listGames, deleteGame, modifyGame, createGame } from "../../dataManager/gameManager";
+import { getGame, listGames, deleteGame, modifyGame, createGame, getGameDetails } from "../../dataManager/gameManager";
 import { Wishlist } from "../../models/wishlist"; 
 import { createCollection, getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection, listCollections } from "../../dataManager/collectionManager";
 import * as Interfaces from "../interfaces/interfaces";
@@ -77,9 +77,9 @@ export async function getGameHttpResponse(game: Game) {
     }
   }
 
-  export async function getGameAndPriceMonitorsHttpResponse(game: Game) {
+  export async function getGameDetailsHttpResponse(game: Game) {
     try {
-      let response = await getGame(game);
+      let response = await getGameDetails(game);
       return httpResponse({statusCode: 200, body: JSON.stringify(response)});
     } catch (err: any) {
       if (err instanceof GameError) {
