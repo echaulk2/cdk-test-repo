@@ -2,6 +2,7 @@ import { Game } from "../models/game";
 import { GameError } from "../error/gameErrorHandler";
 import * as Config from "../shared/config/config";
 import * as Common from "../shared/common/game";
+import * as CommonCollection from "../shared/common/collection";
 
   export async function createGame(game: Game): Promise<Game> {
     try {
@@ -150,3 +151,24 @@ import * as Common from "../shared/common/game";
       }
     }
   }
+
+  export async function getGameAndPriceMonitorsByID(game: Game) : Promise<Game | undefined> {
+    let params = {
+      TableName: Config.table,
+      IndexName: "GSI-1",
+      KeyConditionExpression: "#partitionKey = :partitionKey",
+      ExpressionAttributeNames: {
+          "#partitionKey": "partitionKey"
+      },
+      ExpressionAttributeValues: {
+          ":partitionKey": `${game.gameID}`
+      }
+    };
+    
+    let paginatedData = await Common.getPaginatedData(params);
+    if (paginatedData.length > 0) {
+      for (let item of paginatedData) {
+        return CommonCollection.deserializeDynamoCollection(item);
+      }
+    }
+  } 

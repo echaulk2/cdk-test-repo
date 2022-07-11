@@ -76,6 +76,20 @@ export async function getGameHttpResponse(game: Game) {
       }
     }
   }
+
+  export async function getGameAndPriceMonitorsHttpResponse(game: Game) {
+    try {
+      let response = await getGame(game);
+      return httpResponse({statusCode: 200, body: JSON.stringify(response)});
+    } catch (err: any) {
+      if (err instanceof GameError) {
+        return httpResponse({statusCode: 400, body: 'Game Error'});
+      } else {
+        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving game.'})
+      }
+    }
+  }
+
   export async function createWishlistHttpResponse(wishlist: Wishlist) {
     try {
       let response = await createCollection(wishlist);
