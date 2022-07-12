@@ -1,5 +1,5 @@
 import { Game } from "../../models/game"
-import { getGame, listGames, deleteGame, modifyGame, createGame, getGameDetails } from "../../dataManager/gameManager";
+import { getGame, listGames, deleteGame, modifyGame, createGame } from "../../dataManager/gameManager";
 import { Wishlist } from "../../models/wishlist"; 
 import { createCollection, getAllGamesInCollection, addGameToCollection, modifyGameInCollection, removeGameFromCollection, listCollections } from "../../dataManager/collectionManager";
 import * as Interfaces from "../interfaces/interfaces";
@@ -73,19 +73,6 @@ export async function getGameHttpResponse(game: Game) {
         return httpResponse({statusCode: 400, body: 'Game Error'});
       } else {
         return httpResponse({statusCode: err.statusCode, body: 'Error deleting game.'})
-      }
-    }
-  }
-
-  export async function getGameDetailsHttpResponse(game: Game) {
-    try {
-      let response = await getGameDetails(game);
-      return httpResponse({statusCode: 200, body: JSON.stringify(response)});
-    } catch (err: any) {
-      if (err instanceof GameError) {
-        return httpResponse({statusCode: 400, body: 'Game Error'});
-      } else {
-        return httpResponse({statusCode: err.statusCode, body: 'Error retrieving game.'})
       }
     }
   }

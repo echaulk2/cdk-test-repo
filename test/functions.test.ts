@@ -7,7 +7,9 @@ const common = require("../functions/shared/common/game");
 test("CreateGame", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testCreateGame = new game.Game(gameID, userID, 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let priceMonitorData = [] as any;
+    let testCreateGame = new game.Game(gameID, userID, 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games', defaultCollectionID, priceMonitorData);
     let response = await gameManager.createGame(testCreateGame);
     expect(response).toEqual(testCreateGame);
 });
@@ -15,7 +17,9 @@ test("CreateGame", async () => {
 test("GetGame", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testGetGame = new game.Game(gameID, userID, 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let priceMonitorData = [] as any;
+    let testGetGame = new game.Game(gameID, userID, 'League of Legends', 2008, 'Moba', 'PC', 'Riot Games', defaultCollectionID, priceMonitorData);
     let response = await gameManager.getGame(testGetGame);
     expect(response).toEqual(testGetGame);
 });
@@ -23,7 +27,9 @@ test("GetGame", async () => {
 test("ModifyGame", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testModifyGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let priceMonitorData = [] as any;
+    let testModifyGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games', defaultCollectionID, priceMonitorData);
     let response = await gameManager.modifyGame(testModifyGame);
     expect(response).toEqual(testModifyGame);
 });
@@ -31,7 +37,8 @@ test("ModifyGame", async () => {
 test("DeleteGame", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testDeleteGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let testDeleteGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games', defaultCollectionID);
     let response = await gameManager.deleteGame(testDeleteGame);
     expect(response).toEqual(testDeleteGame);
 });
@@ -48,8 +55,9 @@ test("serializeExistingGameData", async () => {
     let userData = {
         userID: 'erikchaulk',
     }
+    let defaultCollectionID = `Col-${userData.userID}-Default`;
     let response = common.serializeExistingGameData(userData, data);
-    let testDynamoResponse = new game.Game(data.gameID, userData.userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let testDynamoResponse = new game.Game(data.gameID, userData.userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games', defaultCollectionID);
     expect(response).toEqual(testDynamoResponse);
 });
 
@@ -61,7 +69,9 @@ test("gameErrorHandler", async () => {
 test("createGameHttpResponse", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let priceMonitorData = [] as any;
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games', defaultCollectionID, priceMonitorData);
     let response = await httpResponse.createGameHttpResponse(testGame);
     expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
@@ -78,7 +88,9 @@ test("createGameHttpResponse", async () => {
 test("getGameHttpResponse", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let priceMonitorData = [] as any;
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2010, 'Moba', 'PC', 'Riot Games', defaultCollectionID, priceMonitorData);
     let response = await httpResponse.getGameHttpResponse(testGame);
     expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
@@ -86,7 +98,9 @@ test("getGameHttpResponse", async () => {
 test("modifyGameHttpResponse", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let priceMonitorData = [] as any;
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games', defaultCollectionID, priceMonitorData);
     let response = await httpResponse.modifyGameHttpResponse(testGame);
     expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
@@ -103,7 +117,8 @@ test("modifyGameHttpResponse", async () => {
 test("deleteGameHttpResponse", async () => {
     let gameID = '123456';
     let userID = 'erikchaulk';
-    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games');
+    let defaultCollectionID = `Col-${userID}-Default`;
+    let testGame = new game.Game(gameID, userID, 'League of Legends', 2012, 'Moba', 'PC', 'Riot Games', defaultCollectionID);
     let response = await httpResponse.deleteGameHttpResponse(testGame);
     expect(response).toEqual(httpResponse.httpResponse({statusCode: 200, body: JSON.stringify(testGame)}));
 });
