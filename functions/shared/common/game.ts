@@ -29,14 +29,14 @@ export function deserializeGameData(data: Interfaces.IDynamoGameItem) : Game {
 }
 
 export function serializeExistingGameData(userData: Interfaces.IUserData, data: Interfaces.IPayloadData) : Game {  
-  let defaultCollectionID = `Col-${userData.userID}-Default`;
-  return new Game(data.gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, defaultCollectionID);
+  let collectionID = (data.collectionID) ? data.collectionID : `Col-${userData.userID}-Default`;
+  return new Game(data.gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, collectionID);
 }
 
 export function serializeNewGameData(userData: Interfaces.IUserData, data: Interfaces.IPayloadData) : Game {
   let gameID = `G-${Config.uuidv4()}`;
-  let defaultCollectionID = `Col-${userData.userID}-Default`;
-  return new Game(gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, defaultCollectionID);
+  let collectionID = (data.collectionID) ? data.collectionID : `Col-${userData.userID}-Default`;
+  return new Game(gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, collectionID);
 }
 
 export async function getPaginatedData(params: Interfaces.IPaginatedParams) : Promise<Array<any>>{

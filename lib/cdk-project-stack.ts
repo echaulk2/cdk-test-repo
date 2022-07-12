@@ -377,21 +377,6 @@ export class CdkProjectStack extends cdk.Stack {
         validateRequestParameters: false,
       })
     });
-    
-    restAPI.root.addResource("getGameDetails").addMethod("GET", apiIntegration, {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: {
-        authorizerId: authorizer.ref
-      },
-      requestParameters: {
-        "method.request.querystring.gameID": true,        
-      },
-      requestValidator: new apigateway.RequestValidator(restAPI, 'get-game-details-request-validator', {
-        restApi: restAPI,
-        validateRequestBody: false,
-        validateRequestParameters: true,
-      })
-    });
 
     let wishlistAPI = restAPI.root.addResource("collection").addResource("wishlist");
 
