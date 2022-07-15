@@ -76,6 +76,7 @@ export async function getGameHttpResponse(game: Game) {
       }
     }
   }
+
   export async function createWishlistHttpResponse(wishlist: Wishlist) {
     try {
       let response = await createCollection(wishlist);

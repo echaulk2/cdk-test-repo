@@ -138,7 +138,7 @@ export async function getAllPriceMonitorsForGame(game: Game) : Promise<[GamePric
     },
     ExpressionAttributeValues: {
         ":itemType": "[GamePriceMonitor]",
-        ":sortKey": `[Collection]#[${game.collectionID}]#[Game]#[${game.gameID}]#[GamePriceMonitor]`
+        ":sortKey": `[Collection]#[${game?.collectionID}]#[Game]#[${game.gameID}]#[GamePriceMonitor]`
     }
   };
   

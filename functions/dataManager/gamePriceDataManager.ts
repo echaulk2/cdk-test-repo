@@ -52,7 +52,7 @@ export async function createGamePriceData(gamePriceMonitor: GamePriceMonitor) : 
 }
 
 export async function getLatestGamePriceData(gamePriceMonitor: GamePriceMonitor) : Promise<GamePriceData> {
-  let sortKey = `[Collection]#[${gamePriceMonitor.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]#[GamePriceData]`;
+  let sortKey = `[Collection]#[${gamePriceMonitor?.collectionID}]#[Game]#[${gamePriceMonitor.gameID}]#[GamePriceMonitor]#[${gamePriceMonitor.priceMonitorID}]#[GamePriceData]`;
 
   let params = {
       TableName: Config.table,

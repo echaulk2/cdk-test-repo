@@ -2,8 +2,9 @@ import { Game } from "../models/game";
 import { GameError } from "../error/gameErrorHandler";
 import * as Config from "../shared/config/config";
 import * as Common from "../shared/common/game";
+import * as CommonCollection from "../shared/common/collection";
 
-  export async function createGame(game: Game): Promise<Game> {
+  export async function createGame(game: Game): Promise<Game | undefined> {
     try {
       let params = {
         TableName: Config.table,
@@ -18,7 +19,8 @@ import * as Common from "../shared/common/game";
           genre: game.genre,
           yearReleased: game.yearReleased,
           developer: game.developer,
-          console: game.console
+          console: game.console,
+          collectionID: game.collectionID
         },
         ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
       }
@@ -35,22 +37,27 @@ import * as Common from "../shared/common/game";
     }
   }
 
- export async function getGame(game: Game) : Promise<Game> {
-    let partitionKey = game.userID;
-    let sortKey = `[Game]#[${game.gameID}]`;
+ export async function getGame(game: Game) : Promise<Game | undefined> {
     let params = {
       TableName: Config.table,
-      Key: {
-        partitionKey: partitionKey,
-        sortKey: sortKey
+      IndexName: "GSI-2",
+      KeyConditionExpression: "#partitionKey = :partitionKey AND #GS1 = :GS1",
+      ExpressionAttributeNames: {
+          "#partitionKey": "partitionKey",
+          "#GS1": "GS1"
       },
-      KeyConditionExpression: `partitionKey = ${partitionKey} and sortKey = ${sortKey}`
+      ExpressionAttributeValues: {
+          ":partitionKey": `${game.userID}`,
+          ":GS1": `${game.gameID}`
+      }
     }
     
     try {
-      let response = await Config.docClient.get(params).promise();
-      if (response.Item) {
-        return Common.deserializeGameData(response.Item);
+      let paginatedData = await Common.getPaginatedData(params);
+      if (paginatedData.length > 0) {
+        for (let item of paginatedData) {
+          return CommonCollection.deserializeDynamoCollection(item);
+        }
       } else {
         throw new GameError("Unable to get game. Game not found.");
       }      
@@ -90,7 +97,7 @@ import * as Common from "../shared/common/game";
     return gameList;
   }
   
-  export async function modifyGame(game: Game) { 
+  export async function modifyGame(game: Game) : Promise<Game | undefined>  { 
     let partitionKey = game.userID;
     let sortKey = `[Game]#[${game.gameID}]`;
     let template = await Common.generateModifyExpression(game);
@@ -123,7 +130,7 @@ import * as Common from "../shared/common/game";
     }
   }
   
-  export async function deleteGame(game: Game) {
+  export async function deleteGame(game: Game) : Promise<Game | undefined>  {
     let partitionKey = game.userID;
     let sortKey = `[Game]#[${game.gameID}]`;
     let params = {
