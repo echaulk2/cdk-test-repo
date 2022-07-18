@@ -67,6 +67,7 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
     listedItemTitle?: string;
     listedItemURL?: string;
     listedItemConsole?: string;
+    coverImageURL?: string;
   }
 
   export interface IUserData {

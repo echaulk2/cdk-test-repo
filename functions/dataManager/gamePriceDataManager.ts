@@ -35,7 +35,8 @@ export async function createGamePriceData(gamePriceMonitor: GamePriceMonitor) : 
             listedItemTitle: gamePriceData.listedItemTitle,
             listedItemURL: gamePriceData.listedItemURL,
             listedItemConsole: gamePriceData.listedItemConsole,
-            expirationDate: Common.generateTimeToLive(gamePriceData.lastChecked)
+            expirationDate: Common.generateTimeToLive(gamePriceData.lastChecked),
+            coverImageURL: gamePriceData.coverImageURL
           }
         }
         let response = await Config.docClient.put(params).promise();

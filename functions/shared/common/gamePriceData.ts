@@ -2,6 +2,8 @@ import * as Enums from "../enums/enums";
 import * as Interfaces from "../interfaces/interfaces";
 import { Game } from "../../models/game";
 import { GamePriceData } from "../../models/gamePriceData";
+import * as Config from "../config/config";
+import * as cheerio from "cheerio";
 
 export function setDesiredCondition(condition: string) : Enums.DesiredCondition {
     switch(condition) {
@@ -29,6 +31,13 @@ export function setDesiredCondition(condition: string) : Enums.DesiredCondition 
     return false;
   }
 
+  export async function getCoverImage(coverImageURL: string) : Promise<string | undefined> {
+    const response = await Config.axios.get(coverImageURL);
+    const $ = cheerio.load(response.data);
+    let coverImage = $("#product_details").find("div.cover a img").attr('src');
+    return coverImage;
+  }
+
   export function generateModifyExpression(gamePriceData: GamePriceData) : Interfaces.IUpdateExpression {
     let updateExpression: String[] = [];
     let expressionAttributeNames = {} as any;
@@ -51,7 +60,7 @@ export function setDesiredCondition(condition: string) : Enums.DesiredCondition 
   }
 
   export function deserializeGamePriceData(data: Interfaces.IDynamoPriceData) : GamePriceData {
-    return new GamePriceData(data.gamePriceDataID, data.priceMonitorID, data.gameName, data.desiredPrice, data.desiredCondition, data.desiredPriceExists, data.lastChecked, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole);    
+    return new GamePriceData(data.gamePriceDataID, data.priceMonitorID, data.gameName, data.desiredPrice, data.desiredCondition, data.desiredPriceExists, data.lastChecked, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole, data?.coverImageURL);    
   }
 
   export function generateTimeToLive(date: string) {
