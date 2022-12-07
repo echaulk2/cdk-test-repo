@@ -21,7 +21,7 @@ export function setDesiredCondition(condition: string) : Enums.DesiredCondition 
   
   export function invalidData(game: Game, price: number, console: string) : Boolean {
     //Validates whether the game in the row is for the same console in the user's game collection
-    if (game.console && !console.includes(game.console)) {
+    if (game.console && !console.toLocaleLowerCase().includes(game.console.toLocaleLowerCase())) {
       return true;
     } 
     //Validates whether a price exists in the row

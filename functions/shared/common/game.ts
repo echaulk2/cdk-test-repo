@@ -25,18 +25,18 @@ export function generateModifyExpression(dynamoObject: any) : Interfaces.IUpdate
 
 export function deserializeGameData(data: Interfaces.IDynamoGameItem) : Game {
   let collectionID = (data.collectionID) ? data.collectionID : `Col-${data.userID}-Default`;
-  return new Game(data.gameID, data.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, collectionID);
+  return new Game(data.gameID, data.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.cover, collectionID);
 }
 
 export function serializeExistingGameData(userData: Interfaces.IUserData, data: Interfaces.IPayloadData) : Game {  
   let collectionID = (data.collectionID) ? data.collectionID : `Col-${userData.userID}-Default`;
-  return new Game(data.gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, collectionID);
+  return new Game(data.gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.cover, collectionID);
 }
 
 export function serializeNewGameData(userData: Interfaces.IUserData, data: Interfaces.IPayloadData) : Game {
   let gameID = `G-${Config.uuidv4()}`;
   let collectionID = (data.collectionID) ? data.collectionID : `Col-${userData.userID}-Default`;
-  return new Game(gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, collectionID);
+  return new Game(gameID, userData.userID, data.gameName, data?.yearReleased, data?.genre, data?.console, data?.developer, data?.cover, collectionID);
 }
 
 export async function getPaginatedData(params: Interfaces.IPaginatedParams) : Promise<Array<any>>{

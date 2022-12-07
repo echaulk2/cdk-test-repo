@@ -179,7 +179,8 @@ export async function addGameToCollection(game: Game) {
         genre: game.genre,
         yearReleased: game.yearReleased,
         developer: game.developer,
-        console: game.console
+        console: game.console,
+        cover: game.cover
       },
       ConditionExpression: 'attribute_not_exists(partitionKey) AND attribute_not_exists(sortKey)'
     }
