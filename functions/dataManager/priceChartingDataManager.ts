@@ -33,7 +33,7 @@ export class PriceCharting implements Interfaces.IPriceProviders {
             let listedPrice = Number($(el).find(`td.${gameCondition} span`).text().replace(/\s\s+\$/g, '').replace(/\$/g, ''));
             let listedConsole = $(el).find('td.console').text().replace(/\s\s+/g, '');
             let listedItemTitle = $(el).find('td.title a').text().replace(/\s\s+/g, '');
-            let listedItemURL = $(el).find('td.title a').attr('href'); 
+            let listedItemURL = $(el).find('td.title a').attr('href');
             //Only averages items where there is a price entered
             if (Common.invalidData(game, listedPrice, listedConsole)) {
               noPriceCount++;
@@ -52,12 +52,13 @@ export class PriceCharting implements Interfaces.IPriceProviders {
               priceData.listedItemTitle = listedItemTitle;
             }
           });
+          priceData.coverImageURL = priceData.listedItemURL && await Common.getCoverImage(priceData.listedItemURL);
           priceData.lastChecked = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
-          priceData.gamePriceDataID = `PD-${Date.parse(priceData.lastChecked).toString()}`;
+          priceData.gamePriceDataID = `PD-${Date.parse(priceData.lastChecked).toString()}`;          
           return priceData;
         } catch (err) {
             throw new GamePriceError("Error gathering PriceCharting game price data");
         }
     }     
-  }    
+  }
 }

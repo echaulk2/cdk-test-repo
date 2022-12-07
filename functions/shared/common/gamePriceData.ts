@@ -2,6 +2,8 @@ import * as Enums from "../enums/enums";
 import * as Interfaces from "../interfaces/interfaces";
 import { Game } from "../../models/game";
 import { GamePriceData } from "../../models/gamePriceData";
+import * as Config from "../config/config";
+import * as cheerio from "cheerio";
 
 export function setDesiredCondition(condition: string) : Enums.DesiredCondition {
     switch(condition) {
@@ -19,7 +21,7 @@ export function setDesiredCondition(condition: string) : Enums.DesiredCondition 
   
   export function invalidData(game: Game, price: number, console: string) : Boolean {
     //Validates whether the game in the row is for the same console in the user's game collection
-    if (game.console && !console.includes(game.console)) {
+    if (game.console && !console.toLocaleLowerCase().includes(game.console.toLocaleLowerCase())) {
       return true;
     } 
     //Validates whether a price exists in the row
@@ -27,6 +29,13 @@ export function setDesiredCondition(condition: string) : Enums.DesiredCondition 
       return true;
     }
     return false;
+  }
+
+  export async function getCoverImage(coverImageURL: string) : Promise<string | undefined> {
+    const response = await Config.axios.get(coverImageURL);
+    const $ = cheerio.load(response.data);
+    let coverImage = $("#product_details").find("div.cover a img").attr('src');
+    return coverImage;
   }
 
   export function generateModifyExpression(gamePriceData: GamePriceData) : Interfaces.IUpdateExpression {
@@ -51,7 +60,7 @@ export function setDesiredCondition(condition: string) : Enums.DesiredCondition 
   }
 
   export function deserializeGamePriceData(data: Interfaces.IDynamoPriceData) : GamePriceData {
-    return new GamePriceData(data.gamePriceDataID, data.priceMonitorID, data.gameName, data.desiredPrice, data.desiredCondition, data.desiredPriceExists, data.lastChecked, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole);    
+    return new GamePriceData(data.gamePriceDataID, data.priceMonitorID, data.gameName, data.desiredPrice, data.desiredCondition, data.desiredPriceExists, data.lastChecked, data?.lowestPrice, data?.averagePrice, data?.listedItemTitle, data?.listedItemURL, data?.listedItemConsole, data?.coverImageURL);    
   }
 
   export function generateTimeToLive(date: string) {

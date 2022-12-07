@@ -189,7 +189,8 @@ export class CdkProjectStack extends cdk.Stack {
             yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
             genre: { type: apigateway.JsonSchemaType.STRING },
             developer: { type: apigateway.JsonSchemaType.STRING },
-            console: { type: apigateway.JsonSchemaType.STRING },          
+            console: { type: apigateway.JsonSchemaType.STRING },  
+            cover: { type: apigateway.JsonSchemaType.STRING }          
         }
       }
     });   
@@ -207,7 +208,8 @@ export class CdkProjectStack extends cdk.Stack {
           yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
           genre: { type: apigateway.JsonSchemaType.STRING },
           developer: { type: apigateway.JsonSchemaType.STRING },
-          console: { type: apigateway.JsonSchemaType.STRING },          
+          console: { type: apigateway.JsonSchemaType.STRING },  
+          cover: { type: apigateway.JsonSchemaType.STRING }          
       },
       required: ['gameName', 'gameID'],
       },
@@ -239,10 +241,11 @@ export class CdkProjectStack extends cdk.Stack {
           gameName: { type: apigateway.JsonSchemaType.STRING },
           yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
           genre: { type: apigateway.JsonSchemaType.STRING },
-          developer: { type: apigateway.JsonSchemaType.STRING },
+          developer: { type: apigateway.JsonSchemaType.STRING },  
+          cover: { type: apigateway.JsonSchemaType.STRING },
           console: { type: apigateway.JsonSchemaType.STRING },
           desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
-          desiredCondition: { type: apigateway.JsonSchemaType.STRING },                   
+          desiredCondition: { type: apigateway.JsonSchemaType.STRING }
       },
       required: ['gameName', 'collectionID'],
       },
@@ -261,7 +264,8 @@ export class CdkProjectStack extends cdk.Stack {
           gameName: { type: apigateway.JsonSchemaType.STRING },
           yearReleased: { type: apigateway.JsonSchemaType.INTEGER },
           genre: { type: apigateway.JsonSchemaType.STRING },
-          developer: { type: apigateway.JsonSchemaType.STRING },
+          developer: { type: apigateway.JsonSchemaType.STRING },  
+          cover: { type: apigateway.JsonSchemaType.STRING },
           console: { type: apigateway.JsonSchemaType.STRING },
           desiredPrice: { type: apigateway.JsonSchemaType.INTEGER },
           desiredCondition: { type: apigateway.JsonSchemaType.STRING },                   

@@ -10,7 +10,7 @@ import * as CommonCollection from "../shared/common/collection";
         TableName: Config.table,
         Item: {
           partitionKey: game.userID,
-          sortKey: `[Game]#[${game.gameID}]`,
+          sortKey: `[Collection]#[${game.collectionID}]#[Game]#[${game.gameID}]`,
           GS1: game.gameID,
           gameID: game.gameID,
           gameName: game.gameName,        
@@ -19,6 +19,7 @@ import * as CommonCollection from "../shared/common/collection";
           genre: game.genre,
           yearReleased: game.yearReleased,
           developer: game.developer,
+          cover: game.cover,
           console: game.console,
           collectionID: game.collectionID
         },
@@ -99,7 +100,7 @@ import * as CommonCollection from "../shared/common/collection";
   
   export async function modifyGame(game: Game) : Promise<Game | undefined>  { 
     let partitionKey = game.userID;
-    let sortKey = `[Game]#[${game.gameID}]`;
+    let sortKey = `[Collection]#[${game.collectionID}]#[Game]#[${game.gameID}]`;
     let template = await Common.generateModifyExpression(game);
 
     let params = {
@@ -132,7 +133,7 @@ import * as CommonCollection from "../shared/common/collection";
   
   export async function deleteGame(game: Game) : Promise<Game | undefined>  {
     let partitionKey = game.userID;
-    let sortKey = `[Game]#[${game.gameID}]`;
+    let sortKey = `[Collection]#[${game.collectionID}]#[Game]#[${game.gameID}]`;
     let params = {
       TableName: Config.table,
       Key: {

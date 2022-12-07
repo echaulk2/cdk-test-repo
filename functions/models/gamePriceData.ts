@@ -11,8 +11,9 @@ export class GamePriceData {
     listedItemTitle?: string;
     listedItemURL?: string;
     listedItemConsole?: string;
+    coverImageURL?: string;
 
-    constructor(gamePriceDataID:string, priceMonitorID:string, gameName:string, desiredPrice:string, desiredCondition:string, desiredPriceExists:boolean, lastChecked:string, lowestPrice?:string, averagePrice?:string, listedItemTitle?:string, listedItemURL?:string, listedItemConsole?:string) {
+    constructor(gamePriceDataID:string, priceMonitorID:string, gameName:string, desiredPrice:string, desiredCondition:string, desiredPriceExists:boolean, lastChecked:string, lowestPrice?:string, averagePrice?:string, listedItemTitle?:string, listedItemURL?:string, listedItemConsole?:string, coverImageURL?: string) {
         this.gamePriceDataID = gamePriceDataID,
         this.priceMonitorID = priceMonitorID,
         this.gameName = gameName,
@@ -24,6 +25,7 @@ export class GamePriceData {
         this.averagePrice = averagePrice,
         this.listedItemTitle = listedItemTitle,
         this.listedItemURL = listedItemURL,
-        this.listedItemConsole = listedItemConsole
+        this.listedItemConsole = listedItemConsole,
+        this.coverImageURL = coverImageURL
     }
 }

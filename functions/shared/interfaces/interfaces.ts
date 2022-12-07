@@ -16,6 +16,7 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
     genre?: string,
     console?: string,
     developer?: string,
+    cover?: string,
     desiredCondition?: string,
     desiredPrice?: number,    
  }
@@ -32,6 +33,7 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
      genre?: string,
      console?: string,
      developer?: string,
+     cover?: string,
      collectionID?: string,
      desiredCondition?: string,
      desiredPrice?: number
@@ -67,6 +69,7 @@ import { GamePriceMonitor } from "../../models/gamePriceMonitor";
     listedItemTitle?: string;
     listedItemURL?: string;
     listedItemConsole?: string;
+    coverImageURL?: string;
   }
 
   export interface IUserData {
